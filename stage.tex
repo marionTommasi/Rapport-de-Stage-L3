@@ -5,16 +5,24 @@
 %      	trier la kbwt (améliorer la compression)
 %		garder les propriétés de la bwt
 %		améliorer l'indexation (éviter les calculs redondants)
+Le but de ce travail est de proposer un algorithme efficace de compression et d'indexation des reads peu gourmand en mémoire. Pour cela, la piste privilégiée est l'étude de la transformée de Burrows-Wheeler à contexte borné. 
 
+Les reads étant une donnée très redondante, la recherche d'un motif dans le texte devrait occasionner de nombreux calculs identiques. L'un des objectifs est donc d'optimiser la recherche en factorisant ces calculs. 
+
+De plus, du fait de la redondance des données, les $k$-contextes devraient être grands et nombreux. Aussi, pour accentuer la probabilité d'obtenir de longues suites de caractères identiques, l'idée est de trier la \kbwt sur ses $k$-contextes. 
+
+Il faut donc fournir les structures et algorithmes nécessaires au maintien des propriétés de la \bwt sur la \kbwt \ triée.
 
 
 \subsection{Approche}
-	implémentation de la bwt, kbwt, kbwt triée
-	étude sur l'entropie des différentes structures
-	essai de compression avec différents compresseurs existants
-	stocker LF plutot que les structures de Petri
-	optimiser le stockage de LF
-	enlever les k-contextes chevauchant 2 reads
+%	implémentation de la bwt, kbwt, kbwt triée
+%	étude sur l'entropie des différentes structures
+%	essai de compression avec différents compresseurs existants
+%	stocker LF plutot que les structures de Petri
+%	optimiser le stockage de LF
+%	enlever les k-contextes chevauchant 2 reads
+
+
 
 \subsection{Résultats} 
 
