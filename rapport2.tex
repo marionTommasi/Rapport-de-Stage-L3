@@ -1,0 +1,54 @@
+\documentclass[a4paper,12pt,final]{article}
+% Pour une impression recto verso, utilisez plutôt ce documentclass :
+%\documentclass[a4paper,11pt,twoside,final]{article}
+
+\usepackage[english,francais]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[pdftex]{graphicx}
+\usepackage{setspace}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage[french]{varioref}
+
+\newcommand{\reporttitle}{Algorithme de recherche dans des données de séquençage ADN avec la transformée de Burrows-Wheeler à contexte borné}     % Titre
+\newcommand{\reportauthor}{Marion \textsc{Tommasi}} % Auteur
+\newcommand{\reportsubject}{Stage de Licence 3 informatique} % Sujet
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\setlength{\parskip}{1ex} % Espace entre les paragraphes
+\renewcommand{\baselinestretch}{1.5}
+
+\newcommand{\adn}{\textsc{adn}}
+\newcommand{\bwt}{\textsc{bwt}}
+\newcommand{\kbwt}{$k$-\textsc{bwt}}
+
+\hypersetup{
+    pdftitle={\reporttitle},%
+    pdfauthor={\reportauthor},%
+    pdfsubject={\reportsubject},%
+    pdfkeywords={rapport} {L3} {bio-informatique} {algorithmique du texte}
+}
+
+\begin{document}
+  \include{title}
+  \cleardoublepage % Dans le cas du recto verso, ajoute une page blanche si besoin
+  \tableofcontents % Table des matières
+  \sloppy          % Justification moins stricte : des mots ne dépasseront pas des paragraphes
+  \cleardoublepage
+  \include{remerciements}
+  \cleardoublepage
+  \include{intro}
+  \cleardoublepage
+  \include{contexte}
+  \cleardoublepage
+  \include{approche}
+  \cleardoublepage
+  \include{methode}
+  \cleardoublepage
+  \include{resultats}
+  \cleardoublepage
+  \include{concl}
+  \cleardoublepage
+  \include{references}
+\end{document}
+

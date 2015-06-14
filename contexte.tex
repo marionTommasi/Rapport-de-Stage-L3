@@ -1,0 +1,139 @@
+\section{Contexte}
+
+%
+%\subsection{L'équipe}
+%
+%Mon stage s'est déroulé au sein de l'équipe Bonsai, équipe de recherche affiliée à l'Inria Lille - Nord Europe et le Centre de Recherche en Informatique, Signal et Automatique de Lille (CRIStAL, Université Lille 1, CNRS). 
+%
+%\subsubsection{Bonsai}
+%L'équipe Bonsai compte 20 personnes, dont 10 membres permanents, sous la responsabilité d'Hélène Touzet. Le principal objectif de l'équipe est de développer des algorithmes d'analyse de séquences biologiques, que ce soit pour l'étude de l'ADN, de l'ARN, des protéines ou des NRP (peptides non-ribosomiques). Ce travail se réalise souvent en collaborations avec des biologistes, et se concrétise par la création de logiciels. Vidgil, par exemple, est une plate-forme  d'analyse des données de séquençage haut débit développée par l'équipe et utilisée à l'institut Pasteur pour suivre l'évolution de leucémies.
+%
+%\subsubsection{La bio-informatique}
+%La bio-informatique est un secteur en plein expansion 
+
+%\subsection{État de l'art}
+\subsection{Séquençage}
+Le séquençage consiste à déterminer l'ordre des composants de molécules. Le séquençage de l'ADN sert à déterminer l'ordre des nucléotides composant un fragment donné. Pour cela, diverses techniques existent. Historiquement, la méthode la plus utilisée a été celle dite de Sanger, d'après son inventeur, plus facile à robotiser que celle de Maxam et Gilbert, développée à la même époque. Cependant, depuis quelques années, de nouvelles méthodes plus efficaces de séquençage haut débit sont apparues, multipliant le nombre de données issues du séquençage.
+
+\subsubsection{Méthode de Sanger}
+L'ADN polymérase est une enzyme utilisée dans la réplication de l'ADN, qui permet de créer des molécules d'ADN en assemblant des nucléotides. Les nucléotides utilisés lors de la réplication sont des désoxyribonucléotides (dNTP), mais il existe aussi des didésoxyribonucléotides (ddNTP), qui forcent l’arrêt de la réaction à la suite de leur utilisation. 
+
+La méthode de Sanger consiste à répliquer un brin d'ADN dans un milieu ou se trouvent des dNTP ainsi que de quelques ddNTP d'un seul type (ddnTP à Guanine, Thymine, Adénine ou Cytosine). La réplication va donc s’arrêter aléatoirement sur l'un des nucléotides correspondant à la ddNTP choisie. Cette expérience est répétée quatre fois, avec les quatre types de ddNTP, puis l'on compare les longueurs des brins d'ADN répliqués par chromatographie.
+
+
+\begin{figure}[!ht]
+    \center
+    \includegraphics[]{./images/chromato_acanthoweb.jpg}
+    \caption{Exemple de chromatographie}
+    \label{chromato}
+\end{figure}
+
+
+Il ne reste plus qu'à lire la séquence ADN, processus automatisable mais long.
+
+\subsubsection{Séquençage haut débit}
+Il existe de nombreuses techniques de séquençage haut débit, plus ou moins chères, fiables ou efficaces.
+Par exemple, le séquençage par synthèse, utilisé par l'entreprise \emph{Illumina}, est basé sur l'utilisation de colorants fluorescents.
+
+Pour cette méthode, on attache aux séquences étudiées des amorces, qui servent à la synthèse de l'ADN. Puis avec l'ajout de nucléotides et d'ADN polymérase, ces séquences sont amplifiées. On ajoute enfin des nucléotides associés à des couleurs spécifiant leur type (Guanine, Thymine, Cytosine et Adénine), qui vont s'associer à leur complémentaire sur les brins d'ADN. Les nucléotides non-attachés sont ensuite enlevés, et les colorants excités et photographiés. Les colorants sont retirés chimiquement et le processus répété plusieurs fois jusqu'à ce que l'ensemble de l'ADN soit séquencé.
+
+\subsubsection{Reads}
+Les données retournées par les séquenceurs sont appelées des \emph{reads}. Ce sont de très nombreux fragments de l'ADN séquencé. La taille et le nombre de ces fragments varient, mais ils sont souvent composés de 100 à 300 nucléotides et couvrent au moins 30 à 40 fois la séquence initiale. 
+
+Ce sont donc des données très redondantes, ce que nous chercherons à exploiter dans ce stage.
+
+
+\subsection{Transformée de Burrows-Wheeler}
+
+La transformée de Burrows-Wheeler\up{\cite{bwt}}, abrégée \bwt, est un algorithme de réorganisation des données  fréquemment utilisé pour compresser les données. Elle est réversible, augmente la probabilité que des caractères identiques se retrouvent à côté. Il est notamment utilisé dans l'algorithme de compression \emph{bzip2}. 
+
+\subsubsection{Construction}
+La construction de la \bwt est simple : elle consiste à prendre la dernière lettre de toutes les rotations de la chaîne initiale triées lexicographiquement, comme dans l'exemple \ref{bwt}.
+
+\begin{figure}[h!]
+\fbox{%
+  \begin{minipage}{\linewidth}
+    t = "\textsc{barbapapa\$}"
+  	\begin{center}
+  	  \textsc{%
+      \$barbapap {\color{red}a}\\
+      a\$barbapa {\color{red}p}\\
+	  apa\$barba {\color{red}p}\\
+	  apapa\$bar {\color{red}b}\\
+	  arbapapa\$ {\color{red}b}\\
+	  bapapa\$ba {\color{red}r}\\
+	  barbapapa {\color{red}\$}\\
+	  pa\$barbap {\color{red}a}\\
+	  papa\$barb {\color{red}a}\\
+	  rbapapa\$b {\color{red}a}
+	  }
+	\end{center}
+	\textsc{BWT}(t) = "\textsc{appbbr\$aaa}"
+  \end{minipage}%
+}
+\caption{Construction de la \bwt de "\textsc{barbapapa\$}"}
+\label{bwt}
+\end{figure}
+
+On peut d'ailleurs remarquer les suites de P, B et A. En effet, lorsque les lettres sont suivies des mêmes caractères, elles vont se retrouver à côté dans la \bwt, facilitant ainsi la compression.
+
+\subsubsection{Réversibilité}
+Pour assurer la réversibilité, on ajoute un caractère spécial, lexicographiquement plus petit que tous les autres et traditionnellement représenté par \$. Ainsi, on est assuré de savoir où se termine la chaîne initiale.
+
+Pour inverser la \bwt, on reconstruit le tableau des rotations, colonne par colonne.
+Tout d'abord, la dernière colonne correspond à la \bwt, et la première à l'ensemble des lettres dans l'ordre lexicographique. Comme ce sont des rotations, les lettres de la première colonne suivent celles de la dernière. En triant ces groupes de deux lettres, on obtient donc la deuxième colonne, comme dans la figure \ref{unbwt}
+
+\begin{figure}[h!]
+\fbox{%
+  \begin{minipage}{\linewidth}
+	\bwt(t) = "\textsc{appbbr\$aaa}"
+  	\begin{center}
+  	  \textsc{%
+      \$b . . . . . . a{\color{lightgray}\$}\\
+	  a\$ . . . . . . p{\color{lightgray}a}\\
+	  ap . . . . . . p{\color{lightgray}a}\\
+	  ap . . . . . . b{\color{lightgray}a}\\
+	  ar . . . . . . b{\color{lightgray}a}\\
+	  ba . . . . . . r{\color{lightgray}b}\\
+	  ba . . . . . . \${\color{lightgray}b}\\
+	  pa . . . . . . a{\color{lightgray}p}\\
+	  pa . . . . . . a{\color{lightgray}p}\\
+	  rb . . . . . . a{\color{lightgray}r}
+	  }
+	\end{center}
+  \end{minipage}%
+}
+\caption{Inversion de la \textsc{bwt} | Construction de la deuxième colonne}
+\label{unbwt} 
+\end{figure}
+
+On construit de la même façon les colonnes suivantes, pour lire la chaîne initiale sur la ligne terminant par \$.
+
+\subsubsection{FM-index}
+
+En 2000, Paolo Ferragina et Giovanni Manzini créent une structure d'indexation, appelée FM-index, basée sur la \bwt. 
+
+Avec une fonction $rank(c, i)$ qui renvoie  le nombre de caractère $c$ dans $\bwt[0..i]$, et un tableau $C$ donnant pour chaque caractère de \bwt  le nombre de caractère lexicographiquement plus petit que lui, il est possible de calculer le mappage entre la \bwt  (dernière colonne de la table des rotations, aussi désignée par L pour \textit{last}) et la première colonne de la table des rotations (désignée par F pour \textit{first}). Ce mappage est appelé fonction LF().
+
+L'inversion de la \bwt peut se faire avec LF() sans la reconstruction de la totalité du tableau des rotations. 
+Il suffit de partir de \$ et de remonter la fonction LF(), en reconstruisant la chaîne initiale jusqu'au début.
+%Exemple
+
+Grâce à cette structure, Ferragina et Manzini développent également un nouvel algorithme, appelé \textit{backward search}, qui émule sur la \bwt la recherche dans un tableau de suffixe.
+%Exemple
+
+\subsubsection{Contexte borné}
+Un inconvénient majeur de la \bwt est le temps et l'espace nécessaires à sa construction. En effet, trier les rotations peut prendre au maximum $n^{2}$ comparaisons, $n$ étant la longueur de la chaîne.
+Pour pallier à cela, Shindler en 1997 et Yoko en 1999 proposent de ne trier les suffixes que jusqu'à un rang $k$. 
+
+Cette nouvelle structure est couramment appelée transformée de Burrows-Wheeler à contexte borné, ou $k$-\bwt, et on appelle $k$-contextes les parties de la \kbwt dont les rotations sont égales jusqu'à $k$. Dans ces $k$-contextes, les rotations sont rangées dans l'ordre d'apparition dans le texte. L'information de ces $k$-contextes peut être stockée dans un vecteur de bit, que nous appellerons ici $Dk$. Elle peut aussi être retrouvée en temps voulue, comme décrit par Matthias Pétri\up{\cite{petri}} dans sa thèse.
+
+Le résultat de la \kbwt est très proche de la \bwt lorsque $k$ est petit, puisque les deux chaînes ne diffèrent que sur les $k$-contextes. La \kbwt est donc également compressible facilement.
+
+Pour inverser la \kbwt, on utilise on utilise la fonction LF() de la même façon que dans le FM-index pour les k-contextes de taille 1. Lorsque LF() pointe sur un contexte plus grand, les $k$-contextes étant déjà dans l'ordre du texte, il suffit de prendre la première lettre, et de marquer le début du contexte à la lettre suivante.
+%Exemple
+
+Si la fonction LF() ne mappant pas exactement la première et dernière colonne n'est pas un problème pour la réversibilité de la \kbwt, elle empêche en revanche la \textit{backward search}. Petri\up{\cite{petri}} a donc 
+trouver un algorithme pour retrouver LF() à partir de la \kbwt, la $k-1$-\bwt, et quelques structures auxilliaires.
+
+
