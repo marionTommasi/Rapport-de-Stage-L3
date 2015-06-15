@@ -8,10 +8,8 @@
 %\subsubsection{Bonsai}
 %L'équipe Bonsai compte 20 personnes, dont 10 membres permanents, sous la responsabilité d'Hélène Touzet. Le principal objectif de l'équipe est de développer des algorithmes d'analyse de séquences biologiques, que ce soit pour l'étude de l'ADN, de l'ARN, des protéines ou des NRP (peptides non-ribosomiques). Ce travail se réalise souvent en collaborations avec des biologistes, et se concrétise par la création de logiciels. Vidgil, par exemple, est une plate-forme  d'analyse des données de séquençage haut débit développée par l'équipe et utilisée à l'institut Pasteur pour suivre l'évolution de leucémies.
 %
-%\subsubsection{La bio-informatique}
-%La bio-informatique est un secteur en plein expansion 
 
-%\subsection{État de l'art}
+
 \subsection{Séquençage}
 Le séquençage consiste à déterminer l'ordre des composants de molécules. Le séquençage de l'ADN sert à déterminer l'ordre des nucléotides composant un fragment donné. Pour cela, diverses techniques existent. Historiquement, la méthode la plus utilisée a été celle dite de Sanger, d'après son inventeur, plus facile à robotiser que celle de Maxam et Gilbert, développée à la même époque. Cependant, depuis quelques années, de nouvelles méthodes plus efficaces de séquençage haut débit sont apparues, multipliant le nombre de données issues du séquençage.
 
@@ -23,7 +21,7 @@ La méthode de Sanger consiste à répliquer un brin d'ADN dans un milieu ou se 
 
 \begin{figure}[!ht]
     \center
-%    \includegraphics[]{./images/chromato_acanthoweb.jpg}
+    \includegraphics[]{./images/chromato_acanthoweb.jpg}
     \caption{Exemple de chromatographie}
     \label{chromato}
 \end{figure}
@@ -258,6 +256,7 @@ Puis, on prend l'avant dernière lettre de $m$, désignée par $b$. Cette fois, 
 On répète cette opération jusqu'à ce qu'on ai trouvé l'ensemble des rotations dont $m$ est préfixe, ou que les bornes $s_x$ et $e_x$ se rejoignent ou se croisent. Si $e_x - s_x \le 0$, alors $m$ n'est pas dans le texte.
 
 Une fois ces bornes délimitées, on utilise le tableau de suffixes pour trouver les positions de $m$ dans le texte. Soit $p$ l'échantillonnage du tableau de suffixe SA, la position des préfixes des rotations $r$ multiples de $p$ dans le texte est SA[$r/p$]. Pour les rotations qui ne sont pas multiples de $p$, on parcourt la fonction LF() jusqu'à trouver l'une de ces rotations. La position de $m$ se retrouve en ajoutant à la position de cette rotation le nombre de fonction LF() calculées pour y parvenir.
+%Exemple
 
 \subsubsection{Contexte borné}
 Un inconvénient majeur de la \bwt\ est le temps et l'espace nécessaires à sa construction. En effet, trier les rotations peut prendre au maximum $n^{2}$ comparaisons, $n$ étant la longueur de la chaîne.
