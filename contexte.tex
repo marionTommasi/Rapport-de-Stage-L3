@@ -23,7 +23,7 @@ La méthode de Sanger consiste à répliquer un brin d'ADN dans un milieu ou se 
 
 \begin{figure}[!ht]
     \center
-    \includegraphics[]{./images/chromato_acanthoweb.jpg}
+%    \includegraphics[]{./images/chromato_acanthoweb.jpg}
     \caption{Exemple de chromatographie}
     \label{chromato}
 \end{figure}
@@ -43,13 +43,103 @@ Les données retournées par les séquenceurs sont appelées des \emph{reads}. C
 Ce sont donc des données très redondantes, ce que nous chercherons à exploiter dans ce stage.
 
 
+\subsection{Structures de données utilisées}
+
+\subsubsection{Tableau de suffixe}
+Un suffixe d'une chaîne de caractères $s$ est une chaîne $s'$ plus petite tel que $s'$ termine $s$. C'est-à-dire tel qu'il existe une chaîne $p$, pouvant être vide, telle que $p + s' = s$, avec $+$ représentant la concaténation des chaînes. $p$ est d'ailleurs un préfixe de $s$.
+
+Un tableau de suffixes est un tableau d'entiers représentant tous les suffixes d'une chaîne. Pour le construire, il faut construire l'ensemble des suffixes, en attribuant à chaque suffixe un entier présentant son ordre dans le texte. Les suffixes sont ensuite triés par ordre lexicographique, et seuls leur place est gardée. La figure \ref{suffixes} illustre cette construction.
+
+\begin{figure}[h!]
+\fbox{%
+  \begin{minipage}{0.4\linewidth}
+  	\begin{flushleft}
+      \textsc{%
+      0 barbapapa\$\\
+	  1 arbapapa\$\\
+	  2 rbapapa\$\\
+	  3 bapapa\$\\
+	  4 apapa\$\\
+	  5 papa\$\\
+	  6 apa\$\\
+	  7 pa\$\\
+      8 a\$\\
+	  9 \$
+	  }
+  	\end{flushleft}
+  \end{minipage}%
+  \begin{minipage}{0.2\linewidth}
+	\begin{center}
+  		$\rightarrow$
+	\end{center}
+  \end{minipage}%
+  \begin{minipage}{0.4\linewidth}
+  	\begin{flushright}
+      \textsc{%
+	  \$ {\color{red}9}\\
+      a\$ {\color{red}8}\\
+	  apa\$ {\color{red}6}\\
+	  apapa\$ {\color{red}4}\\
+	  arbapapa\$ {\color{red}1}\\
+	  bapapa\$ {\color{red}3}\\
+	  barbapapa\$ {\color{red}0}\\
+	  pa\$ {\color{red}7}\\
+      papa\$ {\color{red}5}\\
+	  rbapapa\$ {\color{red}2}\\
+	  }
+  	\end{flushright}
+  \end{minipage}%
+}
+\caption{Construction du tableau des suffixes (en rouge) pour la chaîne "\textsc{barbapapa\$}"}
+\label{suffixes}
+\end{figure}
+
+\subsubsection{Wavelett tree}
+Les arbres sont des structures de données couramment utilisés en informatique, représentant des graphes acycliques orientés, tels que tous les nœuds sauf un, la racine, ont un unique parent. Pour les arbres binaires, comme le wavelett tree, les nœuds ont au plus deux fils. Les nœuds n'ayant pas de fils sont appelés feuilles.
+
+Le \textit{wavelett tree}, ou arbre d'ondelettes, est une structure de données succincte (c'est-à-dire compressée presque optimalement), à l'origine utilisée pour représenter les tableaux de suffixes compressés.
+
+La construction du wavelett tree est basée sur la division de l'alphabet du mot d'origine en deux. Cette division peut se faire par ordre lexicographique, ou par d'autres algorithmes plus complexes tels que le codage de Huffman. Nous ne nous intéresserons ici qu'à la première façon.
+
+Prenons comme exemple la construction du wavelett tree de \textsc{"barbapapa\$"}. L'alphabet est l'ensemble \textsc{{'\$'; 'a'; 'b'; 'p'; 'r'}}. Les lettres appartenant à la première moitié de l'alphabet (\textsc{{'\$'; 'a'}}) seront représentées par un 0, tandis que les lettres de la deuxième moitié seront des 1. La racine comporte donc le mot "1011010100".
+
+Les deux moitiés de l'alphabet descendent dans les fils de la racine. Le premier nœud code donc \textsc{"aaaa\$} sur l'alphabet \textsc{{'\$'; 'a'}}, et le deuxième nœud code \textsc{"brbpp"} sur l'alphabet \textsc{{'b'; 'r';p}}. La même opération que sur la racine est alors renouvelée, jusqu'à ce que les nœuds ne codent plus qu'une seule lettre.
+
+%Exemple
+
 \subsection{Transformée de Burrows-Wheeler}
 
 La transformée de Burrows-Wheeler\up{\cite{bwt}}, abrégée \bwt, est un algorithme de réorganisation des données  fréquemment utilisé pour compresser les données. Elle est réversible, augmente la probabilité que des caractères identiques se retrouvent à côté. Il est notamment utilisé dans l'algorithme de compression \emph{bzip2}. 
 
 \subsubsection{Construction}
-La construction de la \bwt\ est simple : elle consiste à prendre la dernière lettre de toutes les rotations de la chaîne initiale triées lexicographiquement, comme dans l'exemple \ref{bwt}.
+La construction de la \bwt\ est simple : elle consiste à prendre la dernière lettre de toutes les rotations de la chaîne initiale triées lexicographiquement.
+Une rotation de $k$ éléments d'une chaîne de caractères de longueur $n$ est composée des $n-k$ derniers éléments de la chaîne concaténés aux $k$ premiers.
+Ainsi, on peut voir l'ensemble des rotations d'une chaîne de caractères "\textsc{barbapapa\$}" dans la figure \ref{rotations}.
 
+\begin{figure}[h!]
+\fbox{%
+  \begin{minipage}{\linewidth}
+  	\begin{center}
+ \textsc{%
+      barbapapa\$\\
+	  arbapapa\$b\\
+	  rbapapa\$ba\\
+	  bapapa\$bar\\
+	  apapa\$barb\\
+	  papa\$barba\\
+	  apa\$barbap\\
+	  pa\$barbapa\\
+      a\$barbapap\\
+	  \$barbapapa
+	  }
+	\end{center}
+  \end{minipage}%
+}
+\caption{Ensemble des rotations de la chaîne "\textsc{barbapapa\$}"}
+\label{rotations}
+\end{figure}
+
+Ordonnés par ordre lexicographique, on obtient l'exemple \ref{bwt}, où l'on ne garde que la dernière lettre pour avoir la \bwt.
 \begin{figure}[h!]
 \fbox{%
   \begin{minipage}{\linewidth}
@@ -68,7 +158,7 @@ La construction de la \bwt\ est simple : elle consiste à prendre la dernière l
 	  rbapapa\$b {\color{red}a}
 	  }
 	\end{center}
-	\textsc{BWT}(t) = "\textsc{appbbr\$aaa}"
+	\bwt(t) = "\textsc{appbbr\$aaa}"
   \end{minipage}%
 }
 \caption{Construction de la \bwt\ de "\textsc{barbapapa\$}"}
@@ -78,7 +168,9 @@ La construction de la \bwt\ est simple : elle consiste à prendre la dernière l
 On peut d'ailleurs remarquer les suites de P, B et A. En effet, lorsque les lettres sont suivies des mêmes caractères, elles vont se retrouver à côté dans la \bwt, facilitant ainsi la compression.
 
 \subsubsection{Réversibilité}
-Pour assurer la réversibilité, on ajoute un caractère spécial, lexicographiquement plus petit que tous les autres et traditionnellement représenté par \$. Ainsi, on est assuré de savoir où se termine la chaîne initiale.
+Lorsqu'un algorithme est réversible, c'est que l'on peut retrouver sa donnée de départ à partir de son résultat. C'est donc une propriété importante de la \bwt, puisqu'elle permet de retrouver le texte de départ.
+
+Pour assurer la réversibilité de la \bwt, on ajoute un caractère spécial, lexicographiquement plus petit que tous les autres et traditionnellement représenté par \$. Ainsi, on est assuré de savoir où se termine la chaîne initiale.
 
 Pour inverser la \bwt, on reconstruit le tableau des rotations, colonne par colonne.
 Tout d'abord, la dernière colonne correspond à la \bwt, et la première à l'ensemble des lettres dans l'ordre lexicographique. Comme ce sont des rotations, les lettres de la première colonne suivent celles de la dernière. En triant ces groupes de deux lettres, on obtient donc la deuxième colonne, comme dans la figure \ref{unbwt}
@@ -135,5 +227,3 @@ Pour inverser la \kbwt, on utilise on utilise la fonction LF() de la même faço
 
 Si la fonction LF() ne mappant pas exactement la première et dernière colonne n'est pas un problème pour la réversibilité de la \kbwt, elle empêche en revanche la \textit{backward search}. Petri\up{\cite{petri}} a donc 
 trouver un algorithme pour retrouver LF() à partir de la \kbwt, la $k-1$-\bwt, et quelques structures auxiliaires.
-
-
