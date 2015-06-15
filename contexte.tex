@@ -266,8 +266,12 @@ Cette nouvelle structure est couramment appelée transformée de Burrows-Wheeler
 
 Le résultat de la \kbwt\ est très proche de la \bwt\ lorsque $k$ est petit, puisque les deux chaînes ne diffèrent que sur les $k$-contextes. La \kbwt\ est donc également compressible facilement.
 
-Pour inverser la \kbwt, on utilise on utilise la fonction LF() de la même façon que dans le FM-index pour les k-contextes de taille 1. Lorsque LF() pointe sur un contexte plus grand, les $k$-contextes étant déjà dans l'ordre du texte, il suffit de prendre la première lettre, et de marquer le début du contexte à la lettre suivante.
+Pour inverser la \kbwt, on utilise la fonction LF() de la même façon que dans le FM-index pour les k-contextes de taille 1. Lorsque LF() pointe sur un contexte plus grand, les $k$-contextes étant déjà dans l'ordre du texte, il suffit de prendre la première lettre, et de marquer le début du contexte à la lettre suivante.
 %Exemple
 
-Si la fonction LF() ne mappant pas exactement la première et dernière colonne n'est pas un problème pour la réversibilité de la \kbwt, elle empêche en revanche la \textit{backward search}. Petri\up{\cite{petri}} a donc 
-trouver un algorithme pour retrouver LF() à partir de la \kbwt, la $k-1$-\bwt, et quelques structures auxiliaires.
+La \textit{backward search}, par contre, ne peut pas se calculer pour des motifs de longueur supérieure à $k$. Pour rechercher un motif $m$ plus grand que $k$, une méthode consiste à rechercher le suffixe de longueur $k$ de $m$, puis de remonter avec LF() le long du texte pour tester chaque résultat. Pour cela par contre, la fonction LF() doit être calculée précisément. Petri\up{\cite{petri}} a donc trouver un algorithme pour retrouver LF() à partir de la \kbwt, la $k-1$-\bwt, et quelques structures auxiliaires, dont des vecteurs de bits et deux colonnes supplémentaires de la matrice des rotations.
+
+La \kbwt\ se calcule donc plus facilement que la \bwt, tout en se compressant autant et en assurant également sa réversibilité. Néanmoins, la recherche de motifs requiert beaucoup d'espace supplémentaire.
+
+
+%Si la fonction LF() ne mappant pas exactement la première et dernière colonne n'est pas un problème pour la réversibilité de la \kbwt, elle empêche en revanche la \textit{backward search}. 

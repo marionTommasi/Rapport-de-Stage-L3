@@ -8,7 +8,6 @@
 Le but de ce travail est de proposer un algorithme efficace de compression et d'indexation des reads peu gourmand en mémoire. Pour cela, la piste privilégiée est l'étude de la transformée de Burrows-Wheeler à contexte borné. 
 
 Les reads étant une donnée très redondante, la recherche d'un motif dans le texte devrait occasionner de nombreux calculs identiques. L'un des objectifs est donc d'optimiser la recherche en factorisant ces calculs. 
-%montrer sur exemple en quoi c'est redondant
 
 De plus, du fait de la redondance des données, les $k$-contextes devraient être grands et nombreux. Aussi, pour accentuer la probabilité d'obtenir de longues suites de caractères identiques, l'idée est de trier la \kbwt\ sur ses $k$-contextes, comme dans la figure \ref{tri}.
 
@@ -67,7 +66,11 @@ L'idée est donc de stocker la \kbwt\ dans un wavelett tree, et de garder un vec
 Le vecteur de bit obtenu ne devrait contenir que très peu de 1. Les \textit{sarray} de Okanohara et Sakadane\up{\cite{sarray}} sont optimisés pour les vecteurs de bits éparses. L'information des permutations ne devrait donc pas prendre beaucoup de place.
 
 \subsubsection{Redondance des calculs}
-Pour la redondance des calculs, la première idée a été de calculer la position des motifs par blocs, %expliquer comment.
+Pour la redondance des calculs, la première idée a été de calculer la position des motifs par blocs. Nous nous intéresserons ici qu'aux motifs de taille inférieure ou égale à $k$. 
+
+Tout d'abord, on utilise la \textit{backward search} de Ferragina et Manzini pour déterminer à quel endroit de la \kbwt\ se trouve le motif, et on calcul le nombre de rotations concernées. Il faut maintenant retrouver sa position dans le texte, ce qui se fait grâce à la fonction LF() pour les rotations n'étant pas dans le tableau de suffixe. Or, nous travaillons ici sur des reads, donnée très redondante. La plupart des motifs trouvés ont une forte probabilité de faire partie d'un même motif commun plus grand. Par exemple, dans \textsc{barbapapa\$}, les motifs \textsc{pa} font tous les deux partie du motif \textsc{apa}. La conséquence, comme illustrée dans la figure \ref{redondant} est que la fonction LF() appliquée sur chaque motif nous renverra dans une zone commune de la \kbwt, avec les mêmes motifs les uns à côté des autres. C'est pour cela que l'on propose de calculer LF() par \textit{blocs}, c'est-à-dire de calculer LF() pour la première et la dernière rotation dont le motif recherché est préfixe, et d'inférer grâce à celles-là les autres.
+
+
 
 
 %
