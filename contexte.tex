@@ -48,7 +48,7 @@ Ce sont donc des données très redondantes, ce que nous chercherons à exploite
 La transformée de Burrows-Wheeler\up{\cite{bwt}}, abrégée \bwt, est un algorithme de réorganisation des données  fréquemment utilisé pour compresser les données. Elle est réversible, augmente la probabilité que des caractères identiques se retrouvent à côté. Il est notamment utilisé dans l'algorithme de compression \emph{bzip2}. 
 
 \subsubsection{Construction}
-La construction de la \bwt est simple : elle consiste à prendre la dernière lettre de toutes les rotations de la chaîne initiale triées lexicographiquement, comme dans l'exemple \ref{bwt}.
+La construction de la \bwt\ est simple : elle consiste à prendre la dernière lettre de toutes les rotations de la chaîne initiale triées lexicographiquement, comme dans l'exemple \ref{bwt}.
 
 \begin{figure}[h!]
 \fbox{%
@@ -71,7 +71,7 @@ La construction de la \bwt est simple : elle consiste à prendre la dernière le
 	\textsc{BWT}(t) = "\textsc{appbbr\$aaa}"
   \end{minipage}%
 }
-\caption{Construction de la \bwt de "\textsc{barbapapa\$}"}
+\caption{Construction de la \bwt\ de "\textsc{barbapapa\$}"}
 \label{bwt}
 \end{figure}
 
@@ -113,27 +113,27 @@ On construit de la même façon les colonnes suivantes, pour lire la chaîne ini
 
 En 2000, Paolo Ferragina et Giovanni Manzini créent une structure d'indexation, appelée FM-index, basée sur la \bwt. 
 
-Avec une fonction $rank(c, i)$ qui renvoie  le nombre de caractère $c$ dans $\bwt[0..i]$, et un tableau $C$ donnant pour chaque caractère de \bwt  le nombre de caractère lexicographiquement plus petit que lui, il est possible de calculer le mappage entre la \bwt  (dernière colonne de la table des rotations, aussi désignée par L pour \textit{last}) et la première colonne de la table des rotations (désignée par F pour \textit{first}). Ce mappage est appelé fonction LF().
+Avec une fonction $rank(c, i)$ qui renvoie  le nombre de caractère $c$ dans $\bwt[0..i]$, et un tableau $C$ donnant pour chaque caractère de \bwt\ le nombre de caractère lexicographiquement plus petit que lui, il est possible de calculer le mappage entre la \bwt\ (dernière colonne de la table des rotations, aussi désignée par L pour \textit{last}) et la première colonne de la table des rotations (désignée par F pour \textit{first}). Ce mappage est appelé fonction LF().
 
-L'inversion de la \bwt peut se faire avec LF() sans la reconstruction de la totalité du tableau des rotations. 
+L'inversion de la \bwt\ peut se faire avec LF() sans la reconstruction de la totalité du tableau des rotations. 
 Il suffit de partir de \$ et de remonter la fonction LF(), en reconstruisant la chaîne initiale jusqu'au début.
 %Exemple
 
-Grâce à cette structure, Ferragina et Manzini développent également un nouvel algorithme, appelé \textit{backward search}, qui émule sur la \bwt la recherche dans un tableau de suffixe.
+Grâce à cette structure, Ferragina et Manzini développent également un nouvel algorithme, appelé \textit{backward search}, qui émule sur la \bwt\ la recherche dans un tableau de suffixe.
 %Exemple
 
 \subsubsection{Contexte borné}
-Un inconvénient majeur de la \bwt est le temps et l'espace nécessaires à sa construction. En effet, trier les rotations peut prendre au maximum $n^{2}$ comparaisons, $n$ étant la longueur de la chaîne.
+Un inconvénient majeur de la \bwt\ est le temps et l'espace nécessaires à sa construction. En effet, trier les rotations peut prendre au maximum $n^{2}$ comparaisons, $n$ étant la longueur de la chaîne.
 Pour pallier à cela, Shindler en 1997 et Yoko en 1999 proposent de ne trier les suffixes que jusqu'à un rang $k$. 
 
-Cette nouvelle structure est couramment appelée transformée de Burrows-Wheeler à contexte borné, ou $k$-\bwt, et on appelle $k$-contextes les parties de la \kbwt dont les rotations sont égales jusqu'à $k$. Dans ces $k$-contextes, les rotations sont rangées dans l'ordre d'apparition dans le texte. L'information de ces $k$-contextes peut être stockée dans un vecteur de bit, que nous appellerons ici $Dk$. Elle peut aussi être retrouvée en temps voulue, comme décrit par Matthias Pétri\up{\cite{petri}} dans sa thèse.
+Cette nouvelle structure est couramment appelée transformée de Burrows-Wheeler à contexte borné, ou $k$-\bwt, et on appelle $k$-contextes les parties de la \kbwt\ dont les rotations sont égales jusqu'à $k$. Dans ces $k$-contextes, les rotations sont rangées dans l'ordre d'apparition dans le texte. L'information de ces $k$-contextes peut être stockée dans un vecteur de bit, que nous appellerons ici $Dk$. Elle peut aussi être retrouvée en temps voulue, comme décrit par Matthias Pétri\up{\cite{petri}} dans sa thèse.
 
-Le résultat de la \kbwt est très proche de la \bwt lorsque $k$ est petit, puisque les deux chaînes ne diffèrent que sur les $k$-contextes. La \kbwt est donc également compressible facilement.
+Le résultat de la \kbwt\ est très proche de la \bwt\ lorsque $k$ est petit, puisque les deux chaînes ne diffèrent que sur les $k$-contextes. La \kbwt\ est donc également compressible facilement.
 
 Pour inverser la \kbwt, on utilise on utilise la fonction LF() de la même façon que dans le FM-index pour les k-contextes de taille 1. Lorsque LF() pointe sur un contexte plus grand, les $k$-contextes étant déjà dans l'ordre du texte, il suffit de prendre la première lettre, et de marquer le début du contexte à la lettre suivante.
 %Exemple
 
 Si la fonction LF() ne mappant pas exactement la première et dernière colonne n'est pas un problème pour la réversibilité de la \kbwt, elle empêche en revanche la \textit{backward search}. Petri\up{\cite{petri}} a donc 
-trouver un algorithme pour retrouver LF() à partir de la \kbwt, la $k-1$-\bwt, et quelques structures auxilliaires.
+trouver un algorithme pour retrouver LF() à partir de la \kbwt, la $k-1$-\bwt, et quelques structures auxiliaires.
 
 
