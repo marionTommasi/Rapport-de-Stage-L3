@@ -55,37 +55,44 @@ Un tableau de suffixes est un tableau d'entiers représentant tous les suffixes 
   \begin{minipage}{0.4\linewidth}
   	\begin{flushleft}
       \textsc{%
-      0 barbapapa\$\\
-	  1 arbapapa\$\\
-	  2 rbapapa\$\\
-	  3 bapapa\$\\
-	  4 apapa\$\\
-	  5 papa\$\\
-	  6 apa\$\\
-	  7 pa\$\\
-      8 a\$\\
-	  9 \$
+  	  \begin{tabular}{l|c|}
+  	  	suffixe & indice \tabularnewline \hline
+        barbapapa\$ & 0\\
+	    arbapapa\$ & 1\\
+	    rbapapa\$ & 2\\
+	    bapapa\$ & 3\\
+	    apapa\$ & 4\\
+	    papa\$ & 5\\
+	    apa\$ & 6\\
+	    pa\$ & 7\\
+        a\$ & 8\\
+	    \$ & 9
+	  \end{tabular} 
 	  }
   	\end{flushleft}
   \end{minipage}%
   \begin{minipage}{0.2\linewidth}
 	\begin{center}
+		tri\\
   		$\rightarrow$
 	\end{center}
   \end{minipage}%
   \begin{minipage}{0.4\linewidth}
   	\begin{flushright}
       \textsc{%
-	  \$ {\color{red}9}\\
-      a\$ {\color{red}8}\\
-	  apa\$ {\color{red}6}\\
-	  apapa\$ {\color{red}4}\\
-	  arbapapa\$ {\color{red}1}\\
-	  bapapa\$ {\color{red}3}\\
-	  barbapapa\$ {\color{red}0}\\
-	  pa\$ {\color{red}7}\\
-      papa\$ {\color{red}5}\\
-	  rbapapa\$ {\color{red}2}\\
+  	  \begin{tabular}{|l|c}
+  	  	suffixe & indice\tabularnewline \hline
+	    \$ & {\color{red}9}\\
+        a\$ & {\color{red}8}\\
+	    apa\$ & {\color{red}6}\\
+	    apapa\$ & {\color{red}4}\\
+	    arbapapa\$ & {\color{red}1}\\
+	    bapapa\$ & {\color{red}3}\\
+	    barbapapa\$ & {\color{red}0}\\
+	    pa\$ & {\color{red}7}\\
+        papa\$ & {\color{red}5}\\
+	    rbapapa\$ & {\color{red}2}\\
+	  \end{tabular} 
 	  }
   	\end{flushright}
   \end{minipage}%
@@ -205,14 +212,52 @@ On construit de la même façon les colonnes suivantes, pour lire la chaîne ini
 
 En 2000, Paolo Ferragina et Giovanni Manzini créent une structure d'indexation, appelée FM-index, basée sur la \bwt. 
 
-Avec une fonction $rank(c, i)$ qui renvoie  le nombre de caractère $c$ dans $\bwt[0..i]$, et un tableau $C$ donnant pour chaque caractère de \bwt\ le nombre de caractère lexicographiquement plus petit que lui, il est possible de calculer le mappage entre la \bwt\ (dernière colonne de la table des rotations, aussi désignée par L pour \textit{last}) et la première colonne de la table des rotations (désignée par F pour \textit{first}). Ce mappage est appelé fonction LF().
+Le FM-index contient la \bwt, un échantillonnage du tableau des suffixes (qui donne la position dans le texte initial de chaque rotation), ainsi qu'une fonction $rank(c, i)$  et un tableau $C$.
+La fonction $rank(c, i)$ renvoie  le nombre de caractère $c$ dans $\bwt[0..i]$. Le tableau $C$ donne pour chaque caractère de \bwt\ le nombre de caractère lexicographiquement plus petit que lui.
+
+Grâce à cette structure, il est possible de calculer le mappage entre la \bwt\ (dernière colonne de la table des rotations, aussi désignée par L pour \textit{last}) et la première colonne de la table des rotations (désignée par F pour \textit{first}). Ce mappage, appelé fonction LF() est montré dans la figure \ref{lf}.
 
 L'inversion de la \bwt\ peut se faire avec LF() sans la reconstruction de la totalité du tableau des rotations. 
 Il suffit de partir de \$ et de remonter la fonction LF(), en reconstruisant la chaîne initiale jusqu'au début.
-%Exemple
+
+Par exemple, dans la figure \ref{lf}, '\$' est à l'indice 6, et LF(6) = 0. \bwt[0] = \textsc{'a'}, donc t se termine par \textsc{"a\$"}. On continue, LF(0) = 1, t = \textsc{"...pa\$"} ; LF(1) = 7, t = \textsc{"...apa\$"} ; ainsi de suite jusqu'à ce qu'on ai retrouvé l'entièreté de la chaîne de départ.
+
+\begin{figure}[h!]
+\fbox{%
+  \begin{minipage}{\linewidth}
+	\bwt(t) = "\textsc{appbbr\$aaa}"
+  	\begin{center}
+  	  \textsc{%
+  	  \begin{tabular}{c|c|c}
+  	  	\textup{i} & \bwt & \textsc{LF(\textup{i})}\tabularnewline \hline
+        0 & \$barbapap {\color{red}a} & 1 \\
+	    1 & a\$barbapa {\color{red}p} & 7 \\
+	    2 & apa\$barba {\color{red}p} & 8 \\
+	    3 & apapa\$bar {\color{red}b} & 5 \\
+	    4 & arbapapa\$ {\color{red}b} & 6 \\
+	    5 & bapapa\$ba {\color{red}r} & 9 \\
+	    6 & barbapapa {\color{red}\$} & 0 \\
+	    7 & pa\$barbap {\color{red}a} & 2 \\
+	    8 & papa\$barb {\color{red}a} & 3 \\
+	    9 & rbapapa\$b {\color{red}a} & 4
+  	  \end{tabular}	
+	  }
+	\end{center}
+  \end{minipage}%
+}
+\caption{La fonction LF()}
+\label{lf} 
+\end{figure}
 
 Grâce à cette structure, Ferragina et Manzini développent également un nouvel algorithme, appelé \textit{backward search}, qui émule sur la \bwt\ la recherche dans un tableau de suffixe.
-%Exemple
+
+Pour trouver un motif $m$, on commence par regarder la dernière lettre de $m$, qu'on appellera $a$. Les rotations commençant par cette lettre se trouvent entre les indices $s_a = C[a] + 1$ et $e_a = C[succ(a)]$, avec $succ(a)$ la fonction qui renvoie la lettre suivant $a$ dans l'alphabet. 
+
+Puis, on prend l'avant dernière lettre de $m$, désignée par $b$. Cette fois, le préfixe $ba$ est trouvé dans les rotations $s_b = C[b] + Occ(b, s_a-1) + 1$ et $e_b = C[b] + Occ(b, e_a)$.
+
+On répète cette opération jusqu'à ce qu'on ai trouvé l'ensemble des rotations dont $m$ est préfixe, ou que les bornes $s_x$ et $e_x$ se rejoignent ou se croisent. Si $e_x - s_x \le 0$, alors $m$ n'est pas dans le texte.
+
+Une fois ces bornes délimitées, on utilise le tableau de suffixes pour trouver les positions de $m$ dans le texte. Soit $p$ l'échantillonnage du tableau de suffixe SA, la position des préfixes des rotations $r$ multiples de $p$ dans le texte est SA[$r/p$]. Pour les rotations qui ne sont pas multiples de $p$, on parcourt la fonction LF() jusqu'à trouver l'une de ces rotations. La position de $m$ se retrouve en ajoutant à la position de cette rotation le nombre de fonction LF() calculées pour y parvenir.
 
 \subsubsection{Contexte borné}
 Un inconvénient majeur de la \bwt\ est le temps et l'espace nécessaires à sa construction. En effet, trier les rotations peut prendre au maximum $n^{2}$ comparaisons, $n$ étant la longueur de la chaîne.
