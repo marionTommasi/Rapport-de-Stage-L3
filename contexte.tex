@@ -16,7 +16,7 @@ Le séquençage consiste à déterminer l'ordre des composants de molécules. Le
 \subsubsection{Méthode de Sanger}
 L'ADN polymérase est une enzyme utilisée dans la réplication de l'ADN, qui permet de créer des molécules d'ADN en assemblant des nucléotides. Les nucléotides utilisés lors de la réplication sont des désoxyribonucléotides (dNTP), mais il existe aussi des didésoxyribonucléotides (ddNTP), qui forcent l’arrêt de la réaction à la suite de leur utilisation. 
 
-La méthode de Sanger consiste à répliquer un brin d'ADN dans un milieu ou se trouvent des dNTP ainsi que de quelques ddNTP d'un seul type (ddnTP à Guanine, Thymine, Adénine ou Cytosine). La réplication va donc s’arrêter aléatoirement sur l'un des nucléotides correspondant à la ddNTP choisie. Cette expérience est répétée quatre fois, avec les quatre types de ddNTP, puis l'on compare les longueurs des brins d'ADN répliqués par chromatographie.
+La méthode de Sanger consiste à répliquer un brin d'ADN dans un milieu où se trouvent des dNTP ainsi que de quelques ddNTP d'un seul type (ddNTP à Guanine, Thymine, Adénine ou Cytosine). La réplication va donc s’arrêter aléatoirement sur l'un des nucléotides correspondant à la ddNTP choisie. Cette expérience est répétée quatre fois, avec les quatre types de ddNTP, puis l'on compare les longueurs des brins d'ADN répliqués par chromatographie.
 
 
 \begin{figure}[!ht]
@@ -42,11 +42,12 @@ Ce sont donc des données très redondantes, ce que nous chercherons à exploite
 
 
 \subsection{Structures de données utilisées}
+La suite de ce rapport se concentrera sur une façon de compresser et indexer les reads. Pour cela, nous allons utiliser plusieurs structures de données, notamment des tableaux de suffixes et wavelett tree que nous présentons ici.
 
 \subsubsection{Tableau de suffixe}
-Un suffixe d'une chaîne de caractères $s$ est une chaîne $s'$ plus petite tel que $s'$ termine $s$. C'est-à-dire tel qu'il existe une chaîne $p$, pouvant être vide, telle que $p + s' = s$, avec $+$ représentant la concaténation des chaînes. $p$ est d'ailleurs un préfixe de $s$.
+Un suffixe d'une chaîne de caractères $s$ est une chaîne $s'$ plus petite telle que $s'$ termine $s$. C'est-à-dire tel qu'il existe une chaîne $p$, pouvant être vide, telle que $p + s' = s$, avec $+$ représentant la concaténation des chaînes. $p$ est d'ailleurs un préfixe de $s$.
 
-Un tableau de suffixes est un tableau d'entiers représentant tous les suffixes d'une chaîne. Pour le construire, il faut construire l'ensemble des suffixes, en attribuant à chaque suffixe un entier présentant son ordre dans le texte. Les suffixes sont ensuite triés par ordre lexicographique, et seuls leur place est gardée. La figure \ref{suffixes} illustre cette construction.
+Un tableau de suffixes est un tableau d'entiers représentant tous les suffixes d'une chaîne. Pour le construire, il faut construire l'ensemble des suffixes, en attribuant à chaque suffixe un entier présentant son ordre dans le texte. Les suffixes sont ensuite triés par ordre lexicographique, et seule leur place est gardée. La figure \ref{suffixes} illustre cette construction.
 
 \begin{figure}[h!]
 \fbox{%
@@ -170,7 +171,7 @@ Ordonnés par ordre lexicographique, on obtient l'exemple \ref{bwt}, où l'on ne
 \label{bwt}
 \end{figure}
 
-On peut d'ailleurs remarquer les suites de P, B et A. En effet, lorsque les lettres sont suivies des mêmes caractères, elles vont se retrouver à côté dans la \bwt, facilitant ainsi la compression.
+On peut d'ailleurs remarquer dans la \bwt\ les suites consécutives de P, B et A. En effet, lorsque les lettres sont suivies des mêmes caractères, elles vont se retrouver à côté dans la \bwt, facilitant ainsi la compression.
 
 \subsubsection{Réversibilité}
 Lorsqu'un algorithme est réversible, c'est que l'on peut retrouver sa donnée de départ à partir de son résultat. C'est donc une propriété importante de la \bwt, puisqu'elle permet de retrouver le texte de départ.
@@ -211,14 +212,14 @@ On construit de la même façon les colonnes suivantes, pour lire la chaîne ini
 En 2000, Paolo Ferragina et Giovanni Manzini créent une structure d'indexation, appelée FM-index, basée sur la \bwt. 
 
 Le FM-index contient la \bwt, un échantillonnage du tableau des suffixes (qui donne la position dans le texte initial de chaque rotation), ainsi qu'une fonction $rank(c, i)$  et un tableau $C$.
-La fonction $rank(c, i)$ renvoie  le nombre de caractère $c$ dans $\bwt[0..i]$. Le tableau $C$ donne pour chaque caractère de \bwt\ le nombre de caractère lexicographiquement plus petit que lui.
+La fonction $rank(c, i)$ renvoie  le nombre de caractère $c$ dans $\bwt[0..i]$. Le tableau $C$ donne pour chaque caractère de \bwt\ le nombre de caractères lexicographiquement plus petits que lui.
 
-Grâce à cette structure, il est possible de calculer le mappage entre la \bwt\ (dernière colonne de la table des rotations, aussi désignée par L pour \textit{last}) et la première colonne de la table des rotations (désignée par F pour \textit{first}). Ce mappage, appelé fonction LF() est montré dans la figure \ref{lf}.
+Grâce à cette structure, il est possible de calculer l'association entre la \bwt\ (dernière colonne de la table des rotations, aussi désignée par L pour \textit{last}) et la première colonne de la table des rotations (désignée par F pour \textit{first}). Ce mappage, appelé fonction LF() est montré dans la figure \ref{lf}.
 
 L'inversion de la \bwt\ peut se faire avec LF() sans la reconstruction de la totalité du tableau des rotations. 
 Il suffit de partir de \$ et de remonter la fonction LF(), en reconstruisant la chaîne initiale jusqu'au début.
 
-Par exemple, dans la figure \ref{lf}, '\$' est à l'indice 6, et LF(6) = 0. \bwt[0] = \textsc{'a'}, donc t se termine par \textsc{"a\$"}. On continue, LF(0) = 1, t = \textsc{"...pa\$"} ; LF(1) = 7, t = \textsc{"...apa\$"} ; ainsi de suite jusqu'à ce qu'on ai retrouvé l'entièreté de la chaîne de départ.
+Par exemple, dans la figure \ref{lf}, '\$' est à l'indice 6, et $LF(6) = 0$. $\bwt[0] = \textsc{'a'}$, donc t se termine par \textsc{"a\$"}. On continue, $LF(0) = 1$, $t = \textsc{"...pa\$"}$ ; $LF(1) = 7$, $t = \textsc{"...apa\$"}$ ; ainsi de suite jusqu'à ce qu'on ait retrouvé l'entièreté de la chaîne de départ.
 
 \begin{figure}[h!]
 \fbox{%
@@ -227,7 +228,7 @@ Par exemple, dans la figure \ref{lf}, '\$' est à l'indice 6, et LF(6) = 0. \bwt
   	\begin{center}
   	  \textsc{%
   	  \begin{tabular}{c|c|c}
-  	  	\textup{i} & \bwt & \textsc{LF(\textup{i})}\tabularnewline \hline
+  	  	\textup{i} & \bwt\ & \textsc{LF(\textup{i})}\tabularnewline \hline
         0 & \$barbapap {\color{red}a} & 1 \\
 	    1 & a\$barbapa {\color{red}p} & 7 \\
 	    2 & apa\$barba {\color{red}p} & 8 \\
@@ -253,14 +254,14 @@ Pour trouver un motif $m$, on commence par regarder la dernière lettre de $m$, 
 
 Puis, on prend l'avant dernière lettre de $m$, désignée par $b$. Cette fois, le préfixe $ba$ est trouvé dans les rotations $s_b = C[b] + Occ(b, s_a-1) + 1$ et $e_b = C[b] + Occ(b, e_a)$.
 
-On répète cette opération jusqu'à ce qu'on ai trouvé l'ensemble des rotations dont $m$ est préfixe, ou que les bornes $s_x$ et $e_x$ se rejoignent ou se croisent. Si $e_x - s_x \le 0$, alors $m$ n'est pas dans le texte.
+On répète cette opération jusqu'à ce qu'on ait trouvé l'ensemble des rotations dont $m$ est préfixe, ou que les bornes $s_x$ et $e_x$ se rejoignent ou se croisent. Si $e_x - s_x \le 0$, alors $m$ n'est pas dans le texte.
 
 Une fois ces bornes délimitées, on utilise le tableau de suffixes pour trouver les positions de $m$ dans le texte. Soit $p$ l'échantillonnage du tableau de suffixe SA, la position des préfixes des rotations $r$ multiples de $p$ dans le texte est SA[$r/p$]. Pour les rotations qui ne sont pas multiples de $p$, on parcourt la fonction LF() jusqu'à trouver l'une de ces rotations. La position de $m$ se retrouve en ajoutant à la position de cette rotation le nombre de fonction LF() calculées pour y parvenir.
 %Exemple
 
 \subsubsection{Contexte borné}
 Un inconvénient majeur de la \bwt\ est le temps et l'espace nécessaires à sa construction. En effet, trier les rotations peut prendre au maximum $n^{2}$ comparaisons, $n$ étant la longueur de la chaîne.
-Pour pallier à cela, Shindler en 1997 et Yoko en 1999 proposent de ne trier les suffixes que jusqu'à un rang $k$. 
+Pour pallier cela, Shindler en 1997 et Yoko en 1999 proposent de ne trier les suffixes que jusqu'à un rang $k$. 
 
 Cette nouvelle structure est couramment appelée transformée de Burrows-Wheeler à contexte borné, ou $k$-\bwt, et on appelle $k$-contextes les parties de la \kbwt\ dont les rotations sont égales jusqu'à $k$. Dans ces $k$-contextes, les rotations sont rangées dans l'ordre d'apparition dans le texte. L'information de ces $k$-contextes peut être stockée dans un vecteur de bit, que nous appellerons ici $Dk$. Elle peut aussi être retrouvée en temps voulue, comme décrit par Matthias Pétri\up{\cite{petri}} dans sa thèse.
 
