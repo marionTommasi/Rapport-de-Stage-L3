@@ -14,23 +14,23 @@ De plus, du fait de la redondance des données, les $k$-contextes devraient êtr
 \begin{figure}[h!]
 \fbox{%
   \begin{minipage}{\linewidth}
-    t = "\textsc{aaacaaaacaaaaacaaa\$}"
+    t = "\textsc{ananaaanaanaa\$}"
   	\begin{center}
   	  \textsc{%
-    00\quad \$an anaaanaana {\color{lightgray}a} a\\
-    01\quad a\$a nanaaanaan {\color{lightgray}a} a\\
-	02\quad aa\$ ananaaanaa {\color{lightgray}n} n\\
-	03\quad aaa naanaa\$ana {\color{lightgray}n} n\\
-	04\quad {\color{red}aan} aanaa\$anan {\color{lightgray}a} a\\
-	05\quad {\color{red}aan} aa\$ananaaa {\color{lightgray}n} a\\
-	06\quad {\color{blue}ana} naaanaanaa {\color{lightgray}\$} \$\\
-	07\quad {\color{blue}ana} aanaanaa\$a {\color{lightgray}n} a\\
-	08\quad {\color{blue}ana} anaa\$anana {\color{lightgray}a} a\\
-	09\quad {\color{blue}ana} a\$ananaaan {\color{lightgray}a} n\\
-	10\quad {\color{green}naa} anaanaa\$an {\color{lightgray}a} a\\
-	11\quad {\color{green}naa} naa\$ananaa {\color{lightgray}a} a\\
-	12\quad {\color{green}naa} \$ananaaana {\color{lightgray}a} a\\
-	13\quad nan aaanaanaa\$ {\color{lightgray}a} a
+    \$an anaaanaana {\color{lightgray}a} a\\
+    a\$a nanaaanaan {\color{lightgray}a} a\\
+	aa\$ ananaaanaa {\color{lightgray}n} n\\
+	aaa naanaa\$ana {\color{lightgray}n} n\\
+	{\color{red}aan} aanaa\$anan {\color{lightgray}a} a\\
+	{\color{red}aan} aa\$ananaaa {\color{lightgray}n} a\\
+	{\color{blue}ana} naaanaanaa {\color{lightgray}\$} \$\\
+	{\color{blue}ana} aanaanaa\$a {\color{lightgray}n} a\\
+	{\color{blue}ana} anaa\$anana {\color{lightgray}a} a\\
+	{\color{blue}ana} a\$ananaaan {\color{lightgray}a} n\\
+	{\color{green}naa} anaanaa\$an {\color{lightgray}a} a\\
+	{\color{green}naa} naa\$ananaa {\color{lightgray}a} a\\
+	{\color{green}naa} \$ananaaana {\color{lightgray}a} a\\
+	nan aaanaanaa\$ {\color{lightgray}a} a
 	  }
 	\end{center}
 	$k = 3$\\
@@ -53,7 +53,7 @@ Il faut donc fournir les structures et algorithmes nécessaires au maintien des 
 %	optimiser le stockage de LF
 %	enlever les k-contextes chevauchant 2 reads
 \subsubsection{Tri dans les k-contextes}
-Pour pouvoir trier la \kbwt, il faut s'assurer qu'il est possible de l'inverser, et garder l'indexation.
+Pour que le tri de la \kbwt\ ait un sens, il faut s'assurer qu'il est possible de l'inverser, et garder l'indexation.
 
 Il n'est pas possible d'inverser la \kbwt\ triée telle quelle, puisqu'il est impossible de savoir dans quel ordre étaient les $k$-contextes avant qu'il ne soient triés. Par exemple, \textsc{"ana\textbf{na}anaaanaa\$"} et \textsc{"ana\textbf{an}anaaanaa\$"} ont la même \kbwt\ triée.
 
@@ -65,10 +65,53 @@ L'idée est donc de stocker la \kbwt\ dans un wavelett tree, et de garder un vec
 
 Le vecteur de bit obtenu ne devrait contenir que très peu de 1. Les \textit{sarray} de Okanohara et Sakadane\up{\cite{sarray}} sont optimisés pour les vecteurs de bits éparses. L'information des permutations ne devrait donc pas prendre beaucoup de place.
 
+
+\subsubsection{Compression}
+
+
 \subsubsection{Redondance des calculs}
 Pour la redondance des calculs, la première idée a été de calculer la position des motifs par blocs. Nous nous intéresserons ici qu'aux motifs de taille inférieure ou égale à $k$. 
 
-Tout d'abord, on utilise la \textit{backward search} de Ferragina et Manzini pour déterminer à quel endroit de la \kbwt\ se trouve le motif, et on calcul le nombre de rotations concernées. Il faut maintenant retrouver sa position dans le texte, ce qui se fait grâce à la fonction LF() pour les rotations n'étant pas dans le tableau de suffixe. Or, nous travaillons ici sur des reads, donnée très redondante. La plupart des motifs trouvés ont une forte probabilité de faire partie d'un même motif commun plus grand. Par exemple, dans \textsc{barbapapa\$}, les motifs \textsc{pa} font tous les deux partie du motif \textsc{apa}. La conséquence, comme illustrée dans la figure \ref{redondant} est que la fonction LF() appliquée sur chaque motif nous renverra dans une zone commune de la \kbwt, avec les mêmes motifs les uns à côté des autres. C'est pour cela que l'on propose de calculer LF() par \textit{blocs}, c'est-à-dire de calculer LF() pour la première et la dernière rotation dont le motif recherché est préfixe, et d'inférer grâce à celles-là les autres.
+Tout d'abord, on utilise la \textit{backward search} de Ferragina et Manzini pour déterminer à quel endroit de la \kbwt\ se trouve le motif, et on calcul le nombre de rotations concernées. Il faut maintenant retrouver sa position dans le texte, ce qui se fait grâce à la fonction LF() pour les rotations n'étant pas dans le tableau de suffixe. Or, nous travaillons ici sur des reads, donnée très redondante. La plupart des motifs trouvés ont une forte probabilité de faire partie d'un même motif commun plus grand. Par exemple, dans \textsc{barbapapa\$}, les motifs \textsc{pa} font tous les deux partie du motif \textsc{apa}. La conséquence, comme illustrée dans la figure \ref{redondance} est que la fonction LF() appliquée sur chaque motif nous renverra dans une zone commune de la \kbwt, avec les mêmes motifs les uns à côté des autres. 
+
+\begin{figure}[h!]
+\fbox{%
+  \begin{minipage}{\linewidth}
+  	\begin{center}
+  	  \begin{tabular}{c|c|c}
+  	  	\textit{i} & \kbwt\ triée & LF(\textit{i}) \tabularnewline \hline
+    		\textit{i} - 1 & \textsc{{\color{blue}ata} ... c} & \\
+    		\textit{i} & \textsc{{\color{blue}ata} ... \color{blue}{t}} & \textit{j} \\
+		\textit{i} + 1 & \textsc{{\color{blue}ata} ... \color{blue}{t}} & \textit{j} + 2 \\
+		\textit{i} + 2 & \textsc{{\color{blue}ata} ... \color{blue}{t}} & \textit{j} + 3 \\
+		\textit{i} + 3 & \textsc{{\color{blue}ata} ... \color{blue}{t}} & \textit{j} + 4 \\
+		\textit{i} + 4 & \textsc{{\color{blue}ata} ... \color{blue}{t}} & \textit{j} + 5 \\
+		\textit{i} + 5 & \textsc{{\color{blue}ata} ... \color{blue}{t}} & \textit{j} + 6 \\
+		\textit{i} + 6 & \textsc{atc ... t} & \textit{j} + 1\\
+		. & . & . \\
+		. & . & . \\
+		. & . & . \\
+		\textit{j} & \textsc{{\color{blue}tat a}... t} & \\
+		\textit{j} + 1 & \textsc{tat c... t} & \\
+		\textit{j} + 2 & \textsc{{\color{blue}tat a}... t} & \\
+		\textit{j} + 3 & \textsc{{\color{blue}tat a}... t} & \\
+		\textit{j} + 4 & \textsc{{\color{blue}tat a}... t} & \\
+		\textit{j} + 5 & \textsc{{\color{blue}tat a}... t} & \\
+		\textit{j} + 6 & \textsc{{\color{blue}tat a}... t} & \\
+  	  \end{tabular}
+	\end{center}
+	$k = 3$
+  \end{minipage}%
+}
+\caption{Le texte de départ contient plusieurs fois le motif \textsc{tata}, ainsi que les motifs \textsc{tatc} et \textsc{cata}. Ainsi, après avoir trouvé le motif \textsc{ata}, la fonction LF() sur chacune des occurrences pour lesquelles la \kbwt\  est identique nous amène sur une partie de la \kbwt\ presque contiguë.}
+\label{redondance}
+\end{figure}
+
+C'est pour cela que l'on propose de calculer LF() par \textit{blocs}, c'est-à-dire de calculer LF() pour la première et la dernière rotation dont le motif recherché est préfixe, et dont la \kbwt est identique, et d'inférer grâce à celles-là les autres. Il faut pour cela vérifier que d'autres rotations ne se sont pas insérées entre celles calculées, comme le motif \textsc{tatc} dans la figure \ref{redondance}. Pour cela, il suffit de compter le nombre de lignes du motif qui nous intéresse et le nombre de rotations sur la plage renvoyée par LF(). Si ce dernier est plus grand, d'autre motifs se sont insérés. On peut donc diviser le bloc jusqu'à trouver l'emplacement des insertions, et ne pas les inclure dans notre recherche.
+
+Sur la figure \ref{redondance} par exemple, on a $i+5 - i = 5$, tandis que $j+6 - j = 6$. On passe de 6 à 7 lignes, il y a donc eu une insertion (le motif \textsc{tatc}). On divise donc le bloc en deux, et on recommence. $i+5 - i+3 = 2$ et $j+6 - j+4 = 2$, le motif se retrouve bien dans toutes les rotations de $j+4$ à $j+6$. Par contre, $i+2 - i = 2$ et $j+3 - j = 3$, l'insertion est entre $j$ et $j+3$ exclus. On continue donc la division de ce bloc, jusqu'à ce que l'on obtienne LF() pour toutes les rotations.
+
+Le pseudo-code de cet algorithme est présenté dans la figure \ref{algoRecherche}.
 
 
 
