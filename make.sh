@@ -1,2 +1,2 @@
-./clean.sh ; pdflatex -shell-escape rapport.tex ; pdflatex -shell-escape rapport.tex 
+./clean.sh ; pdflatex -shell-escape rapport2.tex ; pdflatex -shell-escape rapport2.tex 
 
