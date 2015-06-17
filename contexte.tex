@@ -42,10 +42,10 @@ Ce sont donc des données très redondantes, ce que nous chercherons à exploite
 
 
 \subsection{Structures de données utilisées}
-La suite de ce rapport se concentrera sur une façon de compresser et indexer les reads. Pour cela, nous allons utiliser plusieurs structures de données, notamment des tableaux de suffixes et wavelett tree que nous présentons ici.
+La suite de ce rapport se concentrera sur une façon de compresser et indexer les reads. Pour cela, nous allons utiliser plusieurs structures de données, notamment des tableaux de suffixes et des wavelett tree que nous présentons ici.
 
 \subsubsection{Tableau de suffixe}
-Un suffixe d'une chaîne de caractères $s$ est une chaîne $s'$ plus petite telle que $s'$ termine $s$. C'est-à-dire tel qu'il existe une chaîne $p$, pouvant être vide, telle que $p + s' = s$, avec $+$ représentant la concaténation des chaînes. $p$ est d'ailleurs un préfixe de $s$.
+Un suffixe d'une chaîne de caractères $s$ est une chaîne $s'$ plus petite telle que $s'$ termine $s$. C'est-à-dire tel qu'il existe une chaîne $p$, pouvant être vide, telle que $p + s' = s$, ($+$ représentant la concaténation des chaînes). $p$ est d'ailleurs un préfixe de $s$.
 
 Un tableau de suffixes est un tableau d'entiers représentant tous les suffixes d'une chaîne. Pour le construire, il faut construire l'ensemble des suffixes, en attribuant à chaque suffixe un entier présentant son ordre dans le texte. Les suffixes sont ensuite triés par ordre lexicographique, et seule leur place est gardée. La figure \ref{suffixes} illustre cette construction.
 
@@ -107,15 +107,15 @@ Le \textit{wavelett tree}, ou arbre d'ondelettes, est une structure de données 
 
 La construction du wavelett tree est basée sur la division de l'alphabet du mot d'origine en deux. Cette division peut se faire par ordre lexicographique, ou par d'autres algorithmes plus complexes tels que le codage de Huffman. Nous ne nous intéresserons ici qu'à la première façon.
 
-Prenons comme exemple la construction du wavelett tree de \textsc{"barbapapa\$"}. L'alphabet est l'ensemble \textsc{{'\$'; 'a'; 'b'; 'p'; 'r'}}. Les lettres appartenant à la première moitié de l'alphabet (\textsc{{'\$'; 'a'}}) seront représentées par un 0, tandis que les lettres de la deuxième moitié seront des 1. La racine comporte donc le mot "1011010100".
+Prenons comme exemple la construction du wavelett tree de \textsc{"barbapapa\$"}. L'alphabet est l'ensemble \textsc{\{'\$'; 'a'; 'b'; 'p'; 'r'\}}. Les lettres appartenant à la première moitié de l'alphabet (\textsc{\{'\$'; 'a'\}}) seront représentées par un 0, tandis que les lettres de la deuxième moitié seront des 1. La racine comporte donc le mot "1011010100".
 
-Les deux moitiés de l'alphabet descendent dans les fils de la racine. Le premier nœud code donc \textsc{"aaaa\$} sur l'alphabet \textsc{{'\$'; 'a'}}, et le deuxième nœud code \textsc{"brbpp"} sur l'alphabet \textsc{{'b'; 'r';p}}. La même opération que sur la racine est alors renouvelée, jusqu'à ce que les nœuds ne codent plus qu'une seule lettre.
+Les deux moitiés de l'alphabet descendent dans les fils de la racine. Le premier nœud code donc \textsc{"aaaa\$} sur l'alphabet \textsc{\{'\$'; 'a'\}}, et le deuxième nœud code \textsc{"brbpp"} sur l'alphabet \textsc{\{'b'; 'r'; 'p'\}}. La même opération que sur la racine est alors renouvelée, jusqu'à ce que les nœuds ne codent plus qu'une seule lettre.
 
 %Exemple
 
 \subsection{Transformée de Burrows-Wheeler}
 
-La transformée de Burrows-Wheeler\up{\cite{bwt}}, abrégée \bwt, est un algorithme de réorganisation des données  fréquemment utilisé pour compresser les données. Elle est réversible, augmente la probabilité que des caractères identiques se retrouvent à côté. Il est notamment utilisé dans l'algorithme de compression \emph{bzip2}. 
+La transformée de Burrows-Wheeler\up{\cite{bwt}}, abrégée \bwt, est un algorithme de réorganisation des données, fréquemment utilisé pour compresser les données. C'est un algorithme réversible qui augmente la probabilité que des caractères identiques se retrouvent à côté. Il est notamment utilisé dans l'algorithme de compression \emph{bzip2}. 
 
 \subsubsection{Construction}
 La construction de la \bwt\ est simple : elle consiste à prendre la dernière lettre de toutes les rotations de la chaîne initiale triées lexicographiquement.
@@ -212,9 +212,9 @@ On construit de la même façon les colonnes suivantes, pour lire la chaîne ini
 En 2000, Paolo Ferragina et Giovanni Manzini créent une structure d'indexation, appelée FM-index, basée sur la \bwt. 
 
 Le FM-index contient la \bwt, un échantillonnage du tableau des suffixes (qui donne la position dans le texte initial de chaque rotation), ainsi qu'une fonction $rank(c, i)$  et un tableau $C$.
-La fonction $rank(c, i)$ renvoie  le nombre de caractère $c$ dans $\bwt[0..i]$. Le tableau $C$ donne pour chaque caractère de \bwt\ le nombre de caractères lexicographiquement plus petits que lui.
+La fonction $rank(c, i)$ renvoie  le nombre de caractère $c$ dans $\bwt[0..i]$. Le tableau $C$ donne pour chaque caractère de la \bwt\ le nombre de caractères lexicographiquement plus petits que lui.
 
-Grâce à cette structure, il est possible de calculer l'association entre la \bwt\ (dernière colonne de la table des rotations, aussi désignée par L pour \textit{last}) et la première colonne de la table des rotations (désignée par F pour \textit{first}). Ce mappage, appelé fonction LF() est montré dans la figure \ref{lf}.
+Grâce à cette structure, il est possible de calculer l'association entre la \bwt\ (dernière colonne de la table des rotations, aussi désignée par L pour \textit{last}) et la première colonne de la table des rotations (désignée par F pour \textit{first}). Cette association, appelée fonction LF() est montré dans la figure \ref{lf}.
 
 L'inversion de la \bwt\ peut se faire avec LF() sans la reconstruction de la totalité du tableau des rotations. 
 Il suffit de partir de \$ et de remonter la fonction LF(), en reconstruisant la chaîne initiale jusqu'au début.

@@ -110,19 +110,28 @@ Sur la figure \ref{redondance} par exemple, on a $i+5 - i = 5$, tandis que $j+6 
 
 
 \begin{algorithm}
-\caption{Recherche de motif}	
+\caption{Recherche de positions dans le texte}	
 \label{bloc}	
 	\begin{algorithmic}
-		\REQUIRE Une \kbwt\ triée $kbwt$, son tableau de suffixe $SA$ échantillonné de $p$ et un motif $m$, avec $|m| < k$
-%		\CALL{backwards_search}{(m,kbwt)}
-%		\STATE $l = e-s$
-%		\STATE $lfs\gets lf(s)$
-%		\STATE $lfe\gets lf(e)$
-%		\IF{$lf(e) - lf(s) > e-s$}
-%			\STATE chercher insertions
-%		\ELSE
-%			\STATE c'est bon
-%		\ENDIF
+	\REQUIRE 
+		\begin{itemize}
+			\item $s$ et $e$ les indices de la première est la dernière rotation dont le motif est préfixe, 
+			\item la fonction $LF()$, 
+			\item le tableau de suffixe $SA$ et son échantillonnage $p$, 
+		\end{itemize}
+%		\CALL{recherchePositions}{$s$, $e$, $SA$, $p$, 0, []}
+%		\FUNCTION{recherchePositions}{$s$, $e$, $SA$, $p$, $cpt$, $lpos$}
+
+	\FORALL{$i \geq s,\ i \leq e,\ i\pmod p = 0$}
+		\STATE $lpos \gets lpos + SA[i/p] + cpt$
+	\ENDFOR
+	\IF{$lf(e) - lf(s) == e - s$}
+		\STATE $lpos \gets lpos + chercherPositions(LF(s), LF(e), SA, cpt+1, [])$
+	\ELSE
+		\STATE $lpos \gets chercherPositions((e-s)/2 +s, e, SA, cpt+1, lpos)$
+		\STATE $lpos \gets lpos + chercherPositions(s, (e-s)/2 +s, SA, cpt+1, [])$
+	\ENDIF
+	\RETURN $lpos$
 	\end{algorithmic}
 \end{algorithm}
 
@@ -138,7 +147,7 @@ Deux approches ont été envisagées pour stocker LF(). La première s'appuie su
 \begin{figure}[!ht]
     \center
     \includegraphics[scale = 0.3]{./images/suitesLFreads10K_k10.png}
-    \caption{Reads10K est un ensemble de 500 reads de taille 70. On s'aperçoit qu'il y a plus de 7000 suites de nombres successifs supérieures à 20.}
+    \caption{Reads10K est un ensemble de 500 reads de taille 70. On s'aperçoit qu'il y a plus de 7000 suites de nombres successifs supérieures à 20 dans les k-contextes.}
     \label{suitesLF}
 \end{figure}
 
