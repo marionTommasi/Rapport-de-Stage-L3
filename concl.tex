@@ -1,4 +1,11 @@
-\section*{Conclusion}
+\section*{Discussion}
 \addcontentsline{toc}{section}{Conclusion}
 
-Pour conclure, ...
+Durant ce stage, nous avons donc étudié une façon d'améliorer la compression et l'indexation des reads grâce à la \kbwt. Pour cela, nous avons trié la \kbwt\ sur ses $k$-contextes et stocké la fonction LF(). Nous avons également construit un algorithme pour améliorer la recherche de positions pour des motifs courts. Nous avons ensuite tester nos solutions sur des jeux de données représentatifs de reads sans erreurs.
+
+Lors de ce stage, nous avons également tenté de supprimer de la \kbwt\ les $k$-contextes contenant le symbole de fin de read \$, ceux-ci étant petits et ne représentant pas des motifs intéressants. Leur suppression aurait amélioré grandement le taux de compression, mais nous nous sommes rendus compte qu'ils étaient indispensables au fonctionnement de la structure, et cette piste n'a pas aboutie.
+
+Pour continuer les recherches effectuées, il serait intéressant de calculer le gain de temps de construction entre la \bwt et la \kbwt\ triée.
+
+Pour finir, ces résultats nous permettent d'envisager des améliorations intéressantes, notamment sur la recherche de motifs plus grands que $k$. L'algorithme présenté à la fin de ce rapport pourrait en effet être adapté pour vérifier l'appartenance à un motif en plus de calculer la position dans le texte. En effet, comme expliqué dans la section sur la \kbwt, pour rechercher un motif plus grand que $k$ dans la \kbwt, il faut chercher son suffixe de taille $k$ puis tester tous les résultats en remontant la fonction LF() pour vérifier leur validité. Ce parcourt de la fonction LF() pourrait donc être fait avec notre algorithme, en intégrant cette recherche la recherche des positions, pour gagner en efficacité.
+

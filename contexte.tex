@@ -42,7 +42,7 @@ Ce sont donc des données très redondantes, ce que nous chercherons à exploite
 
 
 \subsection{Structures de données utilisées}
-La suite de ce rapport se concentrera sur une façon de compresser et indexer les reads. Pour cela, nous allons utiliser plusieurs structures de données, notamment des tableaux de suffixes et des wavelett tree que nous présentons ici.
+La suite de ce rapport se concentrera sur une façon de compresser et indexer les reads. Pour cela, nous allons utiliser plusieurs structures de données, notamment des tableaux de suffixes et des wavelet tree que nous présentons ici.
 
 \subsubsection{Tableau de suffixe}
 Un suffixe d'une chaîne de caractères $s$ est une chaîne $s'$ plus petite telle que $s'$ termine $s$. C'est-à-dire tel qu'il existe une chaîne $p$, pouvant être vide, telle que $p + s' = s$, ($+$ représentant la concaténation des chaînes). $p$ est d'ailleurs un préfixe de $s$.
@@ -100,14 +100,14 @@ Un tableau de suffixes est un tableau d'entiers représentant tous les suffixes 
 \label{suffixes}
 \end{figure}
 
-\subsubsection{Wavelett tree}
-Les arbres sont des structures de données couramment utilisés en informatique, représentant des graphes acycliques orientés, tels que tous les nœuds sauf un, la racine, ont un unique parent. Pour les arbres binaires, comme le wavelett tree, les nœuds ont au plus deux fils. Les nœuds n'ayant pas de fils sont appelés feuilles.
+\subsubsection{wavelet tree}
+Les arbres sont des structures de données couramment utilisés en informatique, représentant des graphes acycliques orientés, tels que tous les nœuds sauf un, la racine, ont un unique parent. Pour les arbres binaires, comme le wavelet tree, les nœuds ont au plus deux fils. Les nœuds n'ayant pas de fils sont appelés feuilles.
 
-Le \textit{wavelett tree}, ou arbre d'ondelettes, est une structure de données succincte (c'est-à-dire compressée presque optimalement), à l'origine utilisée pour représenter les tableaux de suffixes compressés.
+Le \textit{wavelet tree}, ou arbre d'ondelettes, est une structure de données succincte (c'est-à-dire compressée presque optimalement), à l'origine utilisée pour représenter les tableaux de suffixes compressés, permettant de stocker des chaînes de caractères.
 
-La construction du wavelett tree est basée sur la division de l'alphabet du mot d'origine en deux. Cette division peut se faire par ordre lexicographique, ou par d'autres algorithmes plus complexes tels que le codage de Huffman. Nous ne nous intéresserons ici qu'à la première façon.
+La construction du wavelet tree est basée sur la division de l'alphabet du mot d'origine en deux. Cette division peut se faire par ordre lexicographique, ou par d'autres algorithmes plus complexes tels que le codage de Huffman. Nous ne nous intéresserons ici qu'à la première façon.
 
-Prenons comme exemple la construction du wavelett tree de \textsc{"barbapapa\$"}. L'alphabet est l'ensemble \textsc{\{'\$'; 'a'; 'b'; 'p'; 'r'\}}. Les lettres appartenant à la première moitié de l'alphabet (\textsc{\{'\$'; 'a'\}}) seront représentées par un 0, tandis que les lettres de la deuxième moitié seront des 1. La racine comporte donc le mot "1011010100".
+Prenons comme exemple la construction du wavelet tree de \textsc{"barbapapa\$"}. L'alphabet est l'ensemble \textsc{\{'\$'; 'a'; 'b'; 'p'; 'r'\}}. Les lettres appartenant à la première moitié de l'alphabet (\textsc{\{'\$'; 'a'\}}) seront représentées par un 0, tandis que les lettres de la deuxième moitié seront des 1. La racine comporte donc le mot "1011010100".
 
 Les deux moitiés de l'alphabet descendent dans les fils de la racine. Le premier nœud code donc \textsc{"aaaa\$} sur l'alphabet \textsc{\{'\$'; 'a'\}}, et le deuxième nœud code \textsc{"brbpp"} sur l'alphabet \textsc{\{'b'; 'r'; 'p'\}}. La même opération que sur la racine est alors renouvelée, jusqu'à ce que les nœuds ne codent plus qu'une seule lettre.
 
@@ -256,7 +256,7 @@ Puis, on prend l'avant dernière lettre de $m$, désignée par $b$. Cette fois, 
 
 On répète cette opération jusqu'à ce qu'on ait trouvé l'ensemble des rotations dont $m$ est préfixe, ou que les bornes $s_x$ et $e_x$ se rejoignent ou se croisent. Si $e_x - s_x \le 0$, alors $m$ n'est pas dans le texte.
 
-Une fois ces bornes délimitées, on utilise le tableau de suffixes pour trouver les positions de $m$ dans le texte. Soit $p$ l'échantillonnage du tableau de suffixe SA, la position des préfixes des rotations $r$ multiples de $p$ dans le texte est SA[$r/p$]. Pour les rotations qui ne sont pas multiples de $p$, on parcourt la fonction LF() jusqu'à trouver l'une de ces rotations. La position de $m$ se retrouve en ajoutant à la position de cette rotation le nombre de fonction LF() calculées pour y parvenir.
+Une fois ces bornes délimitées, on utilise le tableau de suffixes pour trouver les positions de $m$ dans le texte. Soit $p$ l'échantillonnage du tableau de suffixes SA, la position des préfixes des rotations $r$ multiples de $p$ dans le texte est SA[$r/p$]. Pour les rotations qui ne sont pas multiples de $p$, on parcourt la fonction LF() jusqu'à trouver l'une de ces rotations. La position de $m$ se retrouve en ajoutant à la position de cette rotation le nombre de fonction LF() calculées pour y parvenir.
 %Exemple
 
 \subsubsection{Contexte borné}
