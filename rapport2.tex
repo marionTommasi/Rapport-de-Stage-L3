@@ -14,6 +14,12 @@
 \usepackage{algorithmic}
 %\usepackage[ruled,vlined]{algorithm2e}
 
+\newcommand\rmq[2][green!50!black]{\marginpar{\hspace*{-0.5em}\begin{minipage}{0.25\textwidth}\scriptsize\if\empty#1\empty\else\color{#1}\fi
+      #2
+    \end{minipage}
+  }}
+\newcommand\rmqinline[1]{{\footnotesize \color{green!50!black} #1}}
+
 \newcommand{\reporttitle}{Algorithme de recherche dans des données de séquençage ADN avec la transformée de Burrows-Wheeler à contexte borné}     % Titre
 \newcommand{\reportauthor}{Marion \textsc{Tommasi}} % Auteur
 \newcommand{\reportsubject}{Stage de Licence 3 informatique} % Sujet
