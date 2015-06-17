@@ -60,7 +60,7 @@ L'idée est de trier la \kbwt\ sur ses $k$-contextes, comme dans la figure \ref{
 
 
 
-Pour que le tri de la \kbwt\ ait un sens, il faut s'assurer qu'il est possible de l'inverser, et garder l'indexation\rmq{Que veut dire « garder l'indexation » ? Est-ce que, plus globalement, le problème n'est pas de retrouver LF ?}.
+Pour que le tri de la \kbwt\ ait un sens, il faut s'assurer qu'il est possible de l'inverser, et retrouver des motifs efficacement (il faut donc pouvoir retrouver LF()).
 
 Il n'est pas possible d'inverser la \kbwt\ triée telle quelle, puisqu'il est impossible de savoir dans quel ordre étaient les $k$-contextes avant qu'il ne soient triés. Par exemple, \textsc{"ana\textbf{na}anaaanaa\$"} et \textsc{"ana\textbf{an}anaaanaa\$"} ont la même \kbwt\ triée.
 
@@ -70,18 +70,15 @@ Une idée simple est de conserver les permutations pendant le tri des $k$-contex
 
 L'idée est donc de stocker la \kbwt\ dans un wavelet tree, et de garder un vecteur de bit pour mémoriser les changements. Ce vecteur de bit correspond à un \textit{ou exclusif} ($xor$) entre le wavelet tree de la \kbwt\ et celui de la \kbwt\ triée.
 
-Le vecteur de bit obtenu ne devrait contenir que très peu de 1. Les \textit{sarray} de Okanohara et Sakadane\up{\cite{sarray}} sont optimisés pour les vecteurs de bits éparses. L'information des permutations \rmq{Il s'agit plus de la différence que des permutations ici}ne devrait donc pas prendre beaucoup de place.
+Le vecteur de bit obtenu ne devrait contenir que très peu de 1. Les \textit{sarray} de Okanohara et Sakadane\up{\cite{sarray}} sont optimisés pour les vecteurs de bits éparses. L'information de la différence des permutations ne devrait donc pas prendre beaucoup de place.
 
 %Ainsi, le vecteur mappe bit à bit la le wavelett tree de la \kbwt, et est placé à 1 si le bit du wavelett tree change entre la \kbwt\ et la \kbwt\ triée. Ainsi, le passage de la \kbwt\ à celle triée, et inversement, se fait grâce à un \textit{ou exclusif} ($xor$) avec le vecteur de bit.
 
-\subsubsection{Redondance des calculs}
-Pour la redondance des calculs, la première idée a été de calculer la position des motifs par blocs.\rmq{Cette première phrase arrive trop vite, la suite est bien.} Nous nous intéresserons ici qu'aux motifs de taille inférieure ou égale à $k$. 
-
 
 \subsubsection{Recherche de positions de motifs courts}
-Pour éviter la redondance des calculs lors de la recherche de positions de motifs, la première idée a été de calculer ces positions par blocs. Nous nous intéresserons ici qu'aux motifs de taille inférieure ou égale à $k$. 
+Pour éviter la redondance des calculs lors de la recherche de positions de motifs, la première idée a été de calculer ces positions par \textit{blocs}, comme nous allons l'expliquer. Nous ne nous intéresserons ici qu'aux motifs de taille inférieure ou égale à $k$. 
 
-Tout d'abord, on utilise la \textit{backward search} de Ferragina et Manzini pour déterminer à quel endroit de la \kbwt\ se trouve le motif, et on calcule le nombre de rotations concernées. Il faut maintenant retrouver sa position dans le texte, ce qui se fait grâce à la fonction LF() pour les rotations n'étant pas dans le tableau de suffixes. Or, nous travaillons ici sur des reads, donnée très redondante. La plupart des motifs trouvés ont une forte probabilité de faire partie d'un même motif commun plus grand. Par exemple, dans \textsc{barbapapa\$}, les motifs \textsc{pa} font tous les deux partie du motif \textsc{apa}. La conséquence, comme illustrée dans la figure \ref{redondance} \rmq{Si tu prends l'exemple de cette figure, dans ton texte repose-toi dessus, plutôt que de prendre l'exemple de barapapa qu'on ne retrouve pas dans la figure} est que la fonction LF() appliquée sur chaque motif nous renverra dans une zone commune de la \kbwt, avec les mêmes motifs les uns à côté des autres.
+Tout d'abord, on utilise la \textit{backward search} de Ferragina et Manzini pour déterminer à quel endroit de la \kbwt\ se trouve le motif, et on calcule le nombre de rotations concernées. Il faut maintenant retrouver sa position dans le texte, ce qui se fait grâce à la fonction LF() pour les rotations n'étant pas dans le tableau de suffixes. Or, nous travaillons ici sur des reads, donnée très redondante. La plupart des motifs trouvés ont une forte probabilité de faire partie d'un même motif commun plus grand. Par exemple, dans la figure \ref{redondance}, presque tous les motifs \textsc{ata} font partie du motif \textsc{tata}. La conséquence, est que la fonction LF() appliquée sur chaque motif nous renverra dans une zone commune de la \kbwt, avec les mêmes motifs les uns à côté des autres.
 
 \begin{figure}[h!]
 \fbox{%
@@ -150,7 +147,8 @@ Sur la figure \ref{redondance} par exemple, on a $i+5 - i = 5$, tandis que $j+6 
 
 
 \subsubsection{Stockage de la fonction LF}
-La \kbwt\ triée en elle-même prend moins de place que la \bwt. Néanmoins, comme la \kbwt\ classique (non triée), elle requiert de nombreuses autres structures pour calculer LF(). Elle nécessite ainsi, en plus de la \kbwt\ pour un $k$ donné, la \kbwt\ pour $k-1$\rmq{$k-1$-bwt sera plus clair}, les $k$\up{ième}\rmq{pour ième, utilise la macro \texttt{\textbackslash ieme}} colonnes des matrices des rotations de ces deux \kbwt, et quelques vecteurs de bits auxiliaires. Il faut donc plus que quadrupler la taille de la structure pour calculer LF().
+La \kbwt\ triée en elle-même prend moins de place que la \bwt. Néanmoins, comme la \kbwt\ classique (non triée), elle requiert de nombreuses autres structures pour calculer LF(). Elle nécessite ainsi, en plus de la \kbwt\ pour un $k$ donné, la $k-1$-\bwt, les $k$\ieme colonnes des matrices des rotations de ces deux \kbwt, et quelques vecteurs de bits auxiliaires. Il faut donc plus que quadrupler la taille de la structure pour calculer LF().
+% \rmq{pour ième, utilise la macro \texttt{\textbackslash ieme}}
 
 D'un autre côté, on s'attend à ce que la fonction LF() contienne de longues suites de nombres consécutifs, sur le même principe que la redondance des calculs vue dans le paragraphe précédent. LF() pourrait donc être plus compressible que l'ensemble des structures utilisées pour la calculer.
 
@@ -163,8 +161,8 @@ Deux approches ont été envisagées pour stocker LF(). La première s'appuie su
     \label{suitesLF}
 \end{figure}
 
-La deuxième approche consiste à regarder la différence entre la fonction LF() et $LF'(i) = C[i] + rank(\bwt[i], i)$\rmq{S'agit-il de la différence entre LF($i$) et LF'$(i)$ ? Mais dans ce cas, en position i dans la \kbwt{} et dans la BWT nous n'avons pas forcément la même permutation circulaire. Il faut conserver le fait que LF nous amène à la permutation circulaire précédente.}, à savoir la fonction utilisée pour calculer LF() sur la \bwt.
-
+La deuxième approche consiste à regarder la différence entre la fonction LF() et $LF'(i) = C[i] + rank(\bwt[i], i)$, à savoir la fonction utilisée pour calculer LF() sur la \bwt.
+%\rmq{S'agit-il de la différence entre LF($i$) et LF'$(i)$ ? Mais dans ce cas, en position i dans la \kbwt{} et dans la BWT nous n'avons pas forcément la même permutation circulaire. Il faut conserver le fait que LF nous amène à la permutation circulaire précédente.}
 
 
 
@@ -203,3 +201,10 @@ Nous avons étudié la compression de la \kbwt\ triée par rapport à la \kbwt\ 
 \end{figure}
 
 De plus nous avons étudier l'espace pris par la fonction LF() suivant les deux approches décrites dans la section précédente (table \ref{résultats}). 
+
+\begin{tabular}{|c|}
+	\hline
+	les résultats arrivent\\
+	\hline
+\label{résultats}
+\end{tabular}
