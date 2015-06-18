@@ -107,11 +107,50 @@ Le \textit{wavelet tree}, ou arbre d'ondelettes, est une structure de données s
 
 La construction du wavelet tree est basée sur la division de l'alphabet du mot d'origine en deux. Cette division peut se faire par ordre lexicographique, ou par d'autres algorithmes plus complexes tels que le codage de Huffman. Nous ne nous intéresserons ici qu'à la première façon.
 
-Prenons comme exemple la construction du wavelet tree de \textsc{"barbapapa\$"}. L'alphabet est l'ensemble \textsc{\{'\$'; 'a'; 'b'; 'p'; 'r'\}}. Les lettres appartenant à la première moitié de l'alphabet (\textsc{\{'\$'; 'a'\}}) seront représentées par un 0, tandis que les lettres de la deuxième moitié seront des 1. La racine comporte donc le mot "1011010100".
+Prenons comme exemple la construction du wavelet tree de \textsc{"barbapapa\$"} (Figure \ref{wavelet}). L'alphabet est l'ensemble \textsc{\{'\$'; 'a'; 'b'; 'p'; 'r'\}}. Les lettres appartenant à la première moitié de l'alphabet (\textsc{\{'\$'; 'a'\}}) seront représentées par un 0, tandis que les lettres de la deuxième moitié seront des 1. La racine comporte donc le mot "1011010100".
 
 Les deux moitiés de l'alphabet descendent dans les fils de la racine. Le premier nœud code donc \textsc{"aaaa\$} sur l'alphabet \textsc{\{'\$'; 'a'\}}, et le deuxième nœud code \textsc{"brbpp"} sur l'alphabet \textsc{\{'b'; 'r'; 'p'\}}. La même opération que sur la racine est alors renouvelée, jusqu'à ce que les nœuds ne codent plus qu'une seule lettre.
 
-%Exemple
+\begin{figure}[h]
+\Tree [.{\begin{tabular}{|c c c c c c c c c c|}
+\hline
+\textsc{b}&\textsc{a}&\textsc{r}&\textsc{b}&\textsc{a}&
+\textsc{p}&\textsc{a}&\textsc{p}&\textsc{a}&\textsc{\$} \\
+1&0&1&1&0&1&0&1&0&0\\
+\hline
+\end{tabular}}
+ 		[.{\begin{tabular}{|c c c c c|}
+ 		   \hline
+		   \textsc{a}&\textsc{a}&\textsc{a}&\textsc{a}&\$ \\
+		   1&1&1&1&0 \\
+		   \hline
+		   \end{tabular}}
+ 		  \textsc{\$}
+ 		  \textsc{aaaa}
+ 		]  
+ 		[.{\begin{tabular}{|c c c c c|}
+ 			\hline
+			\textsc{b}&\textsc{r}&\textsc{b}&\textsc{p}&\textsc{p} \\
+			0&1&0&1&1 \\
+		    \hline
+			\end{tabular}} 
+ 			\textsc{bb}
+ 			[.{\begin{tabular}{|c c c|}
+ 				\hline
+	   			\textsc{r}&\textsc{p}&\textsc{p} \\
+	   			1&0&0 \\
+		   		\hline
+	   			\end{tabular}} 
+	   			\textsc{pp}
+	   			\textsc{r}
+			]
+ 		]
+ 	]
+
+\caption{wavelet tree de \textsc{barbapapa\$}}
+\label{wavelet}
+\end{figure}
+
 
 \subsection{Transformée de Burrows-Wheeler}
 
@@ -215,7 +254,6 @@ Le FM-index contient la \bwt, un échantillonnage du tableau des suffixes (qui d
 La fonction $rank(c, i)$ renvoie  le nombre de caractère $c$ dans $\bwt[0..i]$. Le tableau $C$ donne pour chaque caractère de la \bwt\ le nombre de caractères lexicographiquement plus petits que lui.
 
 Grâce à cette structure, il est possible de calculer l'association entre la \bwt\ (dernière colonne de la table des rotations, aussi désignée par L pour \textit{last}) et la première colonne de la table des rotations (désignée par F pour \textit{first}) avec la formule suivante : $LF(i) = C[i] + rank(\bwt[i], i)$ (voir figure \ref{lf}).
-% Cette association, appelée fonction LF()(voir figure \ref{lf}), est calculée de la façon suivante :
 
 L'inversion de la \bwt\ peut se faire avec LF() sans la reconstruction de la totalité du tableau des rotations. 
 Il suffit de partir de \$ et de remonter la fonction LF(), en reconstruisant la chaîne initiale jusqu'au début.
@@ -225,7 +263,7 @@ Par exemple, dans la figure \ref{lf}, '\$' est à l'indice 6, et $LF(6) = 0$. $\
 \begin{figure}[h!]
 \fbox{%
   \begin{minipage}{\linewidth}
-	\bwt(t) = "\textsc{appbbr\$aaa}"
+	$\bwt(t) = "\textsc{appbbr\$aaa}"$
   	\begin{center}
   	  \textsc{%
   	  \begin{tabular}{c|c|c}
@@ -236,13 +274,14 @@ Par exemple, dans la figure \ref{lf}, '\$' est à l'indice 6, et $LF(6) = 0$. $\
 	    3 & apapa\$bar {\color{red}b} & 5 \\
 	    4 & arbapapa\$ {\color{red}b} & 6 \\
 	    5 & bapapa\$ba {\color{red}r} & 9 \\
-	    6 & barbapapa {\color{red}\$} & 0 \\
+	    6 & {\color{red}barbapapa \$} & 0 \\
 	    7 & pa\$barbap {\color{red}a} & 2 \\
 	    8 & papa\$barb {\color{red}a} & 3 \\
 	    9 & rbapapa\$b {\color{red}a} & 4
   	  \end{tabular}	
 	  }
 	\end{center}
+	$t = "\textsc{barbapapa\$}"$
   \end{minipage}%
 }
 \caption{La fonction LF()}
@@ -257,25 +296,54 @@ Puis, on prend l'avant dernière lettre de $m$, désignée par $b$. Cette fois, 
 
 On répète cette opération jusqu'à ce qu'on ait lu tout le motif. Si les bornes $e_x$ et $s_x$ se croisent ou s'inversent, c'est-à-dire si $e_x - s_x \le 0$, alors $m$ n'est pas dans le texte.
 
-Une fois ces bornes délimitées, on utilise le tableau de suffixes pour trouver les positions de $m$ dans le texte. Soit $p$ la distance d'échantillonnage du tableau de suffixe SA, la position des préfixes des rotations $r$ multiples de $p$ dans le texte est SA[$r/p$]. Pour les rotations qui ne sont pas multiples de $p$, on parcourt la fonction LF() jusqu'à trouver l'une de ces rotations. La position de $m$ se retrouve en ajoutant à la position de cette rotation le nombre d'itérations de da fonction LF() calculées pour y parvenir.
+Une fois ces bornes délimitées, on utilise le tableau de suffixes pour trouver les positions de $m$ dans le texte. Soit $p$ la distance d'échantillonnage du tableau de suffixe SA, la position des préfixes des rotations $r$ multiples de $p$ dans le texte est SA[$r/p$]. Pour les rotations qui ne sont pas multiples de $p$, on parcourt la fonction LF() jusqu'à trouver l'une de ces rotations. La position de $m$ se retrouve en ajoutant à la position de cette rotation le nombre d'itérations de la fonction LF() calculées pour y parvenir.
 %Exemple
 
 \subsubsection{Contexte borné}
 Un inconvénient majeur de la \bwt\ est le temps et l'espace nécessaires à sa construction. En effet, trier les rotations peut prendre au maximum $n^{2}$ comparaisons, $n$ étant la longueur de la chaîne.
-Pour pallier cela, Shindler en 1997 et Yoko en 1999 proposent de ne trier les suffixes que jusqu'à un rang $k$. 
+Pour pallier cela, Shindler en 1997 et Yoko en 1999 proposent de ne trier les suffixes que jusqu'à un rang $k$ (Figure \ref{kbwt}).
 
 Cette nouvelle structure est couramment appelée transformée de Burrows-Wheeler à contexte borné, ou $k$-\bwt, et on appelle $k$-contextes les parties de la \kbwt\ dont les rotations sont égales jusqu'à $k$. Dans ces $k$-contextes, les rotations sont rangées dans l'ordre d'apparition dans le texte. L'information de ces $k$-contextes peut être stockée dans un vecteur de bit, que nous appellerons ici $Dk$. Elle peut aussi être retrouvée en temps voulue, comme décrit par Matthias Pétri\up{\cite{petri}} dans sa thèse.
 
 Le résultat de la \kbwt\ est très proche de la \bwt\ lorsque $k$ est grand, puisque les deux chaînes ne diffèrent que sur les $k$-contextes. Mais même pour des $k$ petits, comme $k = 10$ par exemple pour des reads de taille 70, les deux structures restent similaires. La \kbwt\ est donc également compressible facilement.
 
-Pour inverser la \kbwt, on utilise la fonction LF() de la même façon que dans le FM-index pour les k-contextes de taille 1. Lorsque LF() pointe sur un contexte plus grand, les $k$-contextes étant déjà dans l'ordre du texte, il suffit de prendre la première lettre, et de marquer le début du contexte à la lettre suivante.
-%\rmq{Je ne comprends pas cette phrase}
-%Exemple
+Pour inverser la \kbwt, on utilise un algorithme similaire à celui de la \bwt. La différence se situe sur les $k$-contextes, qui sont déjà dans l'ordre du texte. Ainsi, si on calcule la fonction LF() de la même façon que pour la \bwt, elle n'associe pas vraiment la dernière colonne des rotations à la première, nous l'appellerons donc LF'() (Figure \ref{kbwt}). Mais l'inversion reste possible. Pour cela, on part de la fin de la chaîne, \$, et on utilise la fonction LF(). Mais au lieu de continuer avec le résultat de LF(), on prend la première rotation de son $k$-contexte sur laquelle on n'est pas encore passé.
 
-La \textit{backward search}, par contre, ne peut pas se calculer pour des motifs de longueur supérieure à $k$. Pour rechercher un motif $m$ plus grand que $k$, une méthode consiste à rechercher le suffixe de longueur $k$ de $m$, puis de remonter avec LF() le long du texte pour tester chaque résultat. Pour cela par contre, la fonction LF() doit être calculée précisément. Petri\up{\cite{petri}} a donc trouvé un algorithme pour retrouver LF() à partir de la \kbwt, la $k-1$-\bwt, et quelques structures auxiliaires, dont des vecteurs de bits et deux colonnes supplémentaires de la matrice des rotations.
+%la fonction LF() de la même façon que dans le FM-index pour les k-contextes de taille 1. Lorsque LF() pointe sur un contexte plus grand, les $k$-contextes étant déjà dans l'ordre du texte, il suffit de prendre la première lettre, et de marquer le début du contexte à la lettre suivante.
+%\rmq{Je ne comprends pas cette phrase}
+
+\begin{figure}
+\fbox{%
+  \begin{minipage}{\linewidth}
+  	$t = "\textsc{barbapapa\$}"$\\
+	\kbwt$(t) = "\textsc{appbb{\color{red}\$r}aaa}"$\\
+	$k = 2$
+  	\begin{center}
+  	  \textsc{%
+  	  \begin{tabular}{c|c|c}
+  	  	\textup{i} & \bwt\ & \textsc{LF'(\textup{i})}\tabularnewline \hline
+        0 & \$b arbapap a & 1 \\
+	    1 & a\$ barbapa p & 7 \\
+	    2 & {\color{blue}ap} a\$barba p & 8 \\
+	    3 & {\color{blue}ap} apa\$bar b & 5 \\
+	    4 & ar bapapa\$ b & 6 \\
+	    5 & {\color{red}ba} rbapapa {\color{red}\$} & 9 \\
+	    6 & {\color{red}ba} papa\$ba {\color{red}r} & 0 \\
+	    7 & {\color{orange}pa} \$barbap a & 2 \\
+	    8 & {\color{orange}pa} pa\$barb a & 3 \\
+	    9 & rb apapa\$b a & 4
+  	  \end{tabular}	
+	  }
+	\end{center}
+  \end{minipage}%
+}
+\caption{\kbwt\ de \textsc{"barbapapa\$"} pour $k = 2$. Les couleurs représentent les différents $k$-contextes. En rouge, on peut voir la différence entre la \bwt\ et la \kbwt.}
+\label{kbwt}
+\end{figure}
+
+
+
+La \textit{backward search}, par contre, ne peut pas se calculer pour des motifs de longueur supérieure à $k$. Pour rechercher un motif $m$ plus grand que $k$, une méthode consiste à rechercher le suffixe de longueur $k$ de $m$, puis de remonter avec LF() le long du texte pour tester pour chaque résultat si les précédentes correspondent bien au début du motif. Pour cela par contre, la fonction LF() doit être calculée précisément. Petri\up{\cite{petri}} a donc trouvé un algorithme pour retrouver LF() à partir de la \kbwt, la $k-1$-\bwt, et quelques structures auxiliaires, dont des vecteurs de bits et deux colonnes supplémentaires de la matrice des rotations.
 %\rmq{Précise ce que veut dire «~tester chaque résultat~»}
 
 La \kbwt\ se calcule donc plus facilement que la \bwt, tout en se compressant autant et en assurant également sa réversibilité. Néanmoins, la recherche de motifs requiert beaucoup d'espace supplémentaire.
-
-
-%Si la fonction LF() ne mappant pas exactement la première et dernière colonne n'est pas un problème pour la réversibilité de la \kbwt, elle empêche en revanche la \textit{backward search}. 
