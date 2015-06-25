@@ -14,7 +14,7 @@ De plus, du fait de la redondance des données, les $k$-contextes devraient êtr
 %Enfin, une autre amélioration sur la taille de l'espace utilisé pour la \kbwt\ est effectuée grâce au stockage de la fonction LF().
 
 \subsubsection{Tri dans les k-contextes}
-L'idée est de trier la \kbwt\ sur ses $k$-contextes, comme dans la figure \ref{tri}, pour accroître le nombre et la taille des suites de caractères identiques.
+Nous proposons de trier la \kbwt\ sur ses $k$-contextes, comme dans la figure \ref{tri}, pour accroître le nombre et la taille des suites de caractères identiques.
 
 \begin{figure}[h!]
 \fbox{%
@@ -56,15 +56,15 @@ Il faut donc conserver des informations supplémentaires pour pouvoir retrouver 
 
 Une idée simple est de conserver les permutations pendant le tri des $k$-contextes. Un simple tableau d'entiers, cependant, prend beaucoup de place.
 
-L'idée est donc de stocker la \kbwt\ dans un wavelet tree, et de garder un vecteur de bit pour mémoriser les changements. Ce vecteur de bit correspond à un \textit{ou exclusif} ($xor$) entre le wavelet tree de la \kbwt\ et celui de la \kbwt\ triée.
+Nous proposons donc de stocker la \kbwt\ dans un wavelet tree, et de garder un vecteur de bits pour mémoriser les changements. Ce vecteur de bits correspond à un \textit{ou exclusif} ($xor$) entre le wavelet tree de la \kbwt\ et celui de la \kbwt\ triée.
 
-Le vecteur de bit obtenu ne devrait contenir que très peu de 1. Les \textit{sarray} de Okanohara et Sakadane\up{\cite{sarray}} sont optimisés pour les vecteurs de bits éparses. L'information de la différence des permutations ne devrait donc pas prendre beaucoup de place.
+Le vecteur de bits obtenu ne devrait contenir que très peu de 1. Les \textit{sarray} de Okanohara et Sakadane\up{\cite{sarray}} sont optimisés pour les vecteurs de bits épars. L'information de la différence des permutations ne devrait donc pas prendre beaucoup de place.
 
 
 \subsubsection{Recherche de positions de motifs courts}
 Pour éviter la redondance des calculs lors de la recherche de positions de motifs, la première idée a été de calculer ces positions par \textit{blocs}, comme nous allons l'expliquer. Nous ne nous intéresserons ici qu'aux motifs de taille inférieure ou égale à $k$. 
 
-Tout d'abord, on utilise la \textit{backward search} de Ferragina et Manzini pour déterminer à quel endroit de la \kbwt\ se trouve le motif, et on calcule le nombre de rotations concernées. Il faut maintenant retrouver sa position dans le texte, ce qui se fait grâce à la fonction LF() pour les rotations n'étant pas dans le tableau de suffixes. Or, nous travaillons ici sur des reads, donnée très redondante. La plupart des motifs trouvés ont une forte probabilité de faire partie d'un même motif commun plus grand. Par exemple, dans la figure \ref{redondance}, presque tous les motifs \textsc{ata} font partie du motif \textsc{tata}. La conséquence, est que la fonction LF() appliquée sur chaque motif nous renverra dans une zone commune de la \kbwt, avec les mêmes motifs les uns à côté des autres.
+Tout d'abord, on utilise la \textit{backward search} de Ferragina et Manzini pour déterminer à quel endroit de la \kbwt\ se trouve le motif, et on calcule le nombre de rotations concernées. Il faut maintenant retrouver sa position dans le texte, ce qui se fait grâce à la fonction LF() pour les rotations n'étant pas dans le tableau de suffixes. Or, nous travaillons ici sur des reads, qui sont des données très redondante. La plupart des motifs trouvés ont une forte probabilité de faire partie d'un même motif commun plus grand. Par exemple, dans la figure \ref{redondance}, presque tous les motifs \textsc{ata} font partie du motif \textsc{tata}. La conséquence est que la fonction LF() appliquée sur chaque motif nous renverra dans une même zone de la \kbwt, avec les mêmes motifs les uns à côté des autres.
 
 \begin{figure}[h!]
 \fbox{%
@@ -99,9 +99,9 @@ Tout d'abord, on utilise la \textit{backward search} de Ferragina et Manzini pou
 \label{redondance}
 \end{figure}
 
-C'est pour cela que l'on propose de calculer LF() par \textit{blocs}, (Algorithme \ref{bloc}). Il s'agit de calculer LF() pour la première et la dernière rotation dont le motif recherché est préfixe, et dont la \kbwt est identique, et d'inférer grâce à celles-là les autres. Il faut pour cela vérifier que d'autres rotations ne se sont pas insérées entre celles calculées, comme le motif \textsc{tatc} dans la figure \ref{redondance}. Pour cela, il suffit de compter le nombre de lignes du motif qui nous intéresse et le nombre de rotations sur la plage renvoyée par LF(). Si ce dernier est plus grand, d'autre motifs se sont insérés. On peut donc diviser le bloc jusqu'à trouver l'emplacement des insertions, et ne pas les inclure dans notre recherche.
+C'est pour cela que l'on propose de calculer LF() par \textit{blocs}, (Algorithme \ref{bloc}). Il s'agit de calculer LF() pour la première et la dernière rotation dont le motif recherché est préfixe, et dont la \kbwt\ est identique, et d'inférer grâce à celles-là celles des rotations intermédiaires. Il faut pour cela vérifier que d'autres rotations ne se sont pas insérées entre celles calculées, comme le motif \textsc{tatc} dans la figure \ref{redondance}. Pour cela, il suffit de compter le nombre de lignes du motif qui nous intéresse et le nombre de rotations sur la plage renvoyée par LF(). Si ce dernier est plus grand, d'autre motifs se sont insérés. On peut donc diviser le bloc jusqu'à trouver l'emplacement des insertions, et ne pas les inclure dans notre recherche.
 
-Sur la figure \ref{redondance} par exemple, on a $i+5 - i = 5$, tandis que $j+6 - j = 6$. On passe de 6 à 7 lignes, il y a donc eu une insertion (le motif \textsc{tatc}). On divise donc le bloc en deux, et on recommence. Pour la deuxième moitié du bloc, le nombre de lignes au départ est le même qu'après le calcul de LF() ($i+5 - i+3 = 2$ et $j+6 - j+4 = 2$), le motif se retrouve bien dans toutes les rotations de $j+4$ à $j+6$. Par contre, pour le premier bloc, $i+2 - i = 2$ et $j+3 - j = 3$, l'insertion a donc lieu entre $j$ et $j+3$ exclus. On continue donc la division de ce bloc, jusqu'à ce que l'on obtienne LF() pour toutes les rotations.
+Sur la figure \ref{redondance} par exemple, pour chercher les positions du motif \textsc{"ata"}, on a $i+5 - i +1 = 6$ lignes, mais $j+6 - j +1 = 7$ lignes entre LF($i$) et LF($i+5$). On passe de 6 à 7 lignes, il y a donc eu une insertion (le motif \textsc{tatc}). On divise donc le bloc en deux, et on recommence. Pour la deuxième moitié du bloc, le nombre de lignes au départ est le même qu'après le calcul de LF() ($i+5 - i+3 = 2$ et $j+6 - j+4 = 2$), le motif se retrouve bien dans toutes les rotations de $j+4$ à $j+6$. Par contre, pour le premier bloc, $i+2 - i = 2$ et $j+3 - j = 3$, l'insertion a donc lieu entre $j$ et $j+3$ exclus. On continue donc la division de ce bloc, jusqu'à ce que l'on obtienne LF() pour toutes les rotations.
 
 
 \begin{algorithm}
@@ -133,7 +133,7 @@ Sur la figure \ref{redondance} par exemple, on a $i+5 - i = 5$, tandis que $j+6 
 
 
 \subsubsection{Stockage de la fonction LF}
-La \kbwt\ triée en elle-même prend moins de place que la \bwt. Néanmoins, comme la \kbwt\ classique (non triée), elle requiert de nombreuses autres structures pour calculer LF(). Elle nécessite ainsi, en plus de la \kbwt\ pour un $k$ donné, la $k-1$-\bwt, les $k$\ieme colonnes des matrices des rotations de ces deux \kbwt, et quelques vecteurs de bits auxiliaires. Il faut donc plus que quadrupler la taille de la structure pour calculer LF().
+La \kbwt\ triée prend moins de place que la \bwt\ après compression. Néanmoins, comme la \kbwt\ classique (non triée), elle requiert de nombreuses autres structures pour calculer LF(). Elle nécessite ainsi, en plus de la \kbwt\ pour un $k$ donné, la $k-1$-\bwt, les $k$\up{ième} colonnes des matrices des rotations de ces deux transformées, et quelques vecteurs de bits auxiliaires. Il faut donc plus que quadrupler la taille de la structure pour calculer LF().
 % \rmq{pour ième, utilise la macro \texttt{\textbackslash ieme}}
 
 D'un autre côté, on s'attend à ce que la fonction LF() contienne de longues suites de nombres consécutifs, sur le même principe que la redondance des calculs vue dans le paragraphe précédent. LF() pourrait donc être plus compressible que l'ensemble des structures utilisées pour la calculer.
@@ -175,9 +175,9 @@ La deuxième approche consiste à regarder la différence entre la fonction LF()
 
 \textit{Cette section n'est donc pas finie, il manque des résultats dont une partie sur l'entropie, une sur les temps de calcul de recherche des motifs avec le stockage de LF(), et une sur les temps de calcul de la recherche de positions avec l'algorithme 1.}
 
-Pour les résultats de cette section, nous nous sommes appuyés sur un jeu de 500 reads de taille 70, sans erreur, appelé reads10K.
+Pour les résultats de cette section, nous nous sommes appuyés sur un jeu synthétique du génome lambda phage de 500 reads de taille 70, sans erreur, appelé reads10K.
 
-Nous avons étudié la compression de la \kbwt\ triée par rapport à la \kbwt\ présentée dans la thèse de Petri\up{\cite{petri}}. Comme attendu, on peut voir dans la figure \ref{tailleContextes} que les $k$-contextes de la \kbwt\ pour des reads sont grands et nombreux. La compression est donc bien meilleure (figure \ref{struct}).
+Nous avons étudié la compression de la \kbwt\ triée par rapport à la \kbwt\ présentée dans la thèse de Petri\up{\cite{petri}}. Comme attendu, on peut voir dans la figure \ref{tailleContextes} que les $k$-contextes de la \kbwt\ pour des reads sont grands et nombreux. La compression est donc meilleure (figure \ref{struct}).
 
 \begin{figure}[!ht]
     \center
@@ -203,7 +203,7 @@ Nous avons étudié la compression de la \kbwt\ triée par rapport à la \kbwt\ 
 \end{center}
 \end{figure}
 
-De plus nous avons étudier l'espace pris par la fonction LF() suivant les deux approches décrites dans la section précédente (table \ref{resLF}). On s’aperçoit que la deuxième méthode, la comparaison des deux fonctions LF() et LF'() est légèrement plus compressible. Dans tous les cas, ces méthodes occupent beaucoup moins d'espace que les structures utilisées par Petri.
+De plus nous avons étudié l'espace pris par la fonction LF() suivant les deux approches décrites dans la section précédente (table \ref{resLF}). On s’aperçoit que la deuxième méthode, la comparaison des deux fonctions LF() et LF'() est légèrement plus compressible. Dans tous les cas, ces méthodes occupent beaucoup moins d'espace que les structures utilisées par Petri.
 
 \begin{figure}
 \begin{center}

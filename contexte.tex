@@ -16,7 +16,7 @@ Le séquençage consiste à déterminer l'ordre des composants de molécules. Le
 \subsubsection{Méthode de Sanger}
 L'ADN polymérase est une enzyme utilisée dans la réplication de l'ADN, qui permet de créer des molécules d'ADN en assemblant des nucléotides. Les nucléotides utilisés lors de la réplication sont des désoxyribonucléotides (dNTP), mais il existe aussi des didésoxyribonucléotides (ddNTP), qui forcent l’arrêt de la réaction à la suite de leur utilisation. 
 
-La méthode de Sanger consiste à répliquer un brin d'ADN dans un milieu où se trouvent des dNTP ainsi que de quelques ddNTP d'un seul type (ddNTP à Guanine, Thymine, Adénine ou Cytosine). La réplication va donc s’arrêter aléatoirement sur l'un des nucléotides correspondant à la ddNTP choisie. Cette expérience est répétée quatre fois, avec les quatre types de ddNTP, puis l'on compare les longueurs des brins d'ADN répliqués par chromatographie.
+La méthode de Sanger consiste à répliquer un brin d'ADN dans un milieu où se trouvent des dNTP ainsi que de quelques ddNTP d'un seul type (ddNTP à Guanine, Thymine, Adénine ou Cytosine). La réplication va donc s’arrêter aléatoirement sur l'un des nucléotides correspondant à la ddNTP choisie. Cette expérience est répétée quatre fois, avec les quatre types de ddNTP, puis l'on compare les longueurs des brins d'ADN répliqués par chromatographie. Il faut ensuite lire la séquence ADN, processus automatisable mais long.
 
 
 \begin{figure}[!ht]
@@ -27,7 +27,6 @@ La méthode de Sanger consiste à répliquer un brin d'ADN dans un milieu où se
 \end{figure}
 
 
-Il ne reste plus qu'à lire la séquence ADN, processus automatisable mais long.
 
 \subsubsection{Séquençage haut débit}
 Il existe de nombreuses techniques de séquençage haut débit, plus ou moins chères, fiables ou efficaces.
@@ -45,9 +44,10 @@ Ce sont donc des données très redondantes, ce que nous chercherons à exploite
 La suite de ce rapport se concentrera sur une façon de compresser et indexer les reads. Pour cela, nous allons utiliser plusieurs structures de données, notamment des tableaux de suffixes et des wavelet tree que nous présentons ici.
 
 \subsubsection{Tableau de suffixes}
-Un suffixe d'une chaîne de caractères $s$ est une chaîne $s'$ plus petite telle que $s'$ termine $s$. C'est-à-dire tel qu'il existe une chaîne $p$, pouvant être vide, telle que $p + s' = s$, ($+$ représentant la concaténation des chaînes). $p$ est d'ailleurs un préfixe de $s$.
+Un suffixe d'une chaîne de caractères $s$ est une chaîne $s'$ telle qu'il existe une chaîne $p$, pouvant être vide, satisfaisant $p + s' = s$ ($+$ représentant la concaténation des chaînes). $p$ est d'ailleurs un préfixe de $s$.
+%Un suffixe d'une chaîne de caractères $s$ est une chaîne $s'$ plus petite telle que $s'$ termine $s$. C'est-à-dire tel qu'il existe une chaîne $p$, pouvant être vide, telle que $p + s' = s$, ($+$ représentant la concaténation des chaînes). $p$ est d'ailleurs un préfixe de $s$.
 
-Un tableau de suffixes est un tableau d'entiers représentant tous les suffixes d'une chaîne. Pour le construire, il faut construire l'ensemble des suffixes, en attribuant à chaque suffixe un entier présentant son ordre dans le texte. Les suffixes sont ensuite triés par ordre lexicographique, et seule leur place est gardée. La figure \ref{suffixes} illustre cette construction.
+Un tableau de suffixes est un tableau d'entiers représentant toutes les positions des suffixes d'une chaîne. Pour le construire, il faut construire l'ensemble des suffixes, en attribuant à chaque suffixe un entier présentant sa position dans le texte. Les suffixes sont ensuite triés par ordre lexicographique, et seule leur position est gardée. La figure \ref{suffixes} illustre cette construction.
 
 \begin{figure}[h!]
 \fbox{%
@@ -55,7 +55,7 @@ Un tableau de suffixes est un tableau d'entiers représentant tous les suffixes 
   	\begin{flushleft}
       \textsc{%
   	  \begin{tabular}{l|c|}
-  	  	suffixe & indice \tabularnewline \hline
+  	  	suffixe & position \tabularnewline \hline
         barbapapa\$ & 0\\
 	    arbapapa\$ & 1\\
 	    rbapapa\$ & 2\\
@@ -80,7 +80,7 @@ Un tableau de suffixes est un tableau d'entiers représentant tous les suffixes 
   	\begin{flushright}
       \textsc{%
   	  \begin{tabular}{|l|c}
-  	  	suffixe & indice\tabularnewline \hline
+  	  	suffixe & position \tabularnewline \hline
 	    \$ & {\color{red}9}\\
         a\$ & {\color{red}8}\\
 	    apa\$ & {\color{red}6}\\
@@ -101,15 +101,15 @@ Un tableau de suffixes est un tableau d'entiers représentant tous les suffixes 
 \end{figure}
 
 \subsubsection{Wavelet tree}
-Les arbres sont des structures de données couramment utilisées en informatique, représentant des graphes acycliques orientés, tels que tous les nœuds sauf un, la racine, ont un unique parent. Pour les arbres binaires, comme le wavelet tree, les nœuds ont au plus deux fils. Les nœuds n'ayant pas de fils sont appelés feuilles.
+Les arbres sont des structures de données couramment utilisées en informatique, représentant des graphes acycliques orientés, tels que tous les nœuds ont un unique parent, sauf la racine qui n'a pas de parent. Pour les arbres binaires, comme le wavelet tree, les nœuds ont au plus deux fils. Les nœuds n'ayant pas de fils sont appelés feuilles.
 
-Le \textit{wavelet tree}, ou arbre d'ondelettes, est une structure de données succincte (c'est-à-dire stockée optimalement), à l'origine utilisée pour représenter les tableaux de suffixes compressés.
+Le \textit{wavelet tree}\up{\cite{wt}}, ou arbre d'ondelettes, est une structure de données succincte (c'est-à-dire stockée optimalement), à l'origine utilisée pour représenter les tableaux de suffixes compressés.
 
 La construction du wavelet tree est basée sur la division de l'alphabet du mot d'origine en deux. Cette division peut se faire par ordre lexicographique, ou par d'autres algorithmes plus complexes tels que le codage de Huffman. Nous ne nous intéresserons ici qu'à la première façon.
 
 Prenons comme exemple la construction du wavelet tree de \textsc{"barbapapa\$"} (Figure \ref{wavelet}). L'alphabet est l'ensemble \textsc{\{'\$'; 'a'; 'b'; 'p'; 'r'\}}. Les lettres appartenant à la première moitié de l'alphabet (\textsc{\{'\$'; 'a'\}}) seront représentées par un 0, tandis que les lettres de la deuxième moitié seront des 1. La racine comporte donc le mot "1011010100".
 
-Les deux moitiés de l'alphabet descendent dans les fils de la racine. Le premier nœud code donc \textsc{"aaaa\$} sur l'alphabet \textsc{\{'\$'; 'a'\}}, et le deuxième nœud code \textsc{"brbpp"} sur l'alphabet \textsc{\{'b'; 'r'; 'p'\}}. La même opération que sur la racine est alors renouvelée, jusqu'à ce que les nœuds ne codent plus qu'une seule lettre.
+Les deux moitiés de l'alphabet descendent dans les fils de la racine. Le premier nœud code donc \textsc{"aaaa\$"} sur l'alphabet \textsc{\{'\$'; 'a'\}}, et le deuxième nœud code \textsc{"brbpp"} sur l'alphabet \textsc{\{'b'; 'r'; 'p'\}}. La même opération que sur la racine est alors renouvelée, jusqu'à ce que les nœuds ne codent plus qu'une seule lettre.
 
 \begin{figure}[h]
 \Tree [.{\begin{tabular}{|c c c c c c c c c c|}
@@ -154,11 +154,14 @@ Les deux moitiés de l'alphabet descendent dans les fils de la racine. Le premie
 
 \subsection{Transformée de Burrows-Wheeler}
 
-La transformée de Burrows-Wheeler\up{\cite{bwt}}, abrégée \bwt, est un algorithme de réorganisation des données, fréquemment utilisé pour compresser les données. C'est un algorithme réversible qui augmente la probabilité que des caractères identiques se retrouvent à côté. Il est notamment utilisé dans l'algorithme de compression \emph{bzip2}.
+La transformée de Burrows-Wheeler\up{\cite{bwt}}, abrégée \bwt, est un algorithme de réorganisation des données, fréquemment utilisé pour compresser les données. C'est un algorithme réversible qui augmente la probabilité que des caractères identiques se retrouvent côte à côte. Il est notamment utilisé dans l'algorithme de compression \emph{bzip2}.
 
 \subsubsection{Construction}
-La construction de la \bwt\ est simple : elle consiste à prendre la dernière lettre de toutes les rotations de la chaîne initiale triées lexicographiquement.
-Une rotation de $k$ éléments d'une chaîne de caractères de longueur $n$ est composée des $n-k$ derniers éléments de la chaîne concaténés aux $k$ premiers.
+Une rotation de $k$ éléments d'une chaîne de caractères de longueur $n$ est composée des $n-k$ derniers éléments de la chaîne concaténés aux $k$ premiers. Par exemple, pour une rotation de 3 sur la chaîne \textsc{"barbapapa"}, on part de la troisième lettre, le \textsc{"r"} et on lit toutes les lettres jusqu'à retomber sur le \textsc{"r"} de départ, en liant la fin du mot avec son début : \textsc{"rbapapa~ba"}.
+
+Pour construire la \bwt, on prend la dernière lettre de toutes les rotations de la chaîne initiale triées lexicographiquement.
+Pour assurer la réversibilité de la \bwt, on ajoute un caractère spécial à la fin de la chaîne, lexicographiquement plus petit que tous les autres et traditionnellement représenté par \$. Grâce à ce caractère, on est assuré de savoir où se termine la chaîne initiale. Nous l'ajouterons donc aux exemples, bien qu'il ne soit pas utile à la construction.
+
 Ainsi, on peut voir l'ensemble des rotations d'une chaîne de caractères "\textsc{barbapapa\$}" dans la figure \ref{rotations}.
 
 \begin{figure}[h!]
@@ -215,7 +218,6 @@ On peut d'ailleurs remarquer dans la \bwt\ les suites consécutives de P, B et A
 \subsubsection{Réversibilité}
 Lorsqu'un algorithme est réversible, c'est que l'on peut retrouver sa donnée de départ à partir de son résultat. C'est par exemple le cas de la compression, qu'on inverse en décompressant. C'est donc une propriété importante de la \bwt, puisqu'elle permet de retrouver le texte de départ.
 
-Pour assurer la réversibilité de la \bwt, on ajoute un caractère spécial, lexicographiquement plus petit que tous les autres et traditionnellement représenté par \$. Ainsi, on est assuré de savoir où se termine la chaîne initiale.
 
 Pour inverser la \bwt, on reconstruit le tableau des rotations, colonne par colonne.
 Tout d'abord, la dernière colonne correspond à la \bwt, et la première à l'ensemble des lettres dans l'ordre lexicographique. Comme ce sont des rotations, les lettres de la première colonne suivent celles de la dernière dans le texte d'origine. En triant ces groupes de deux lettres, on obtient donc la deuxième colonne, comme dans la figure \ref{unbwt}
@@ -240,7 +242,7 @@ Tout d'abord, la dernière colonne correspond à la \bwt, et la première à l'e
 	\end{center}
   \end{minipage}%
 }
-\caption{Inversion de la \textsc{bwt} | Construction de la deuxième colonne. La première colonne a été mise en gris à côté de la dernière pour voir les groupes de deux lettres que l'on retrouve triés à droite.}
+\caption{Inversion de la \textsc{bwt}, construction de la deuxième colonne. La première colonne a été mise en gris à côté de la dernière pour voir les groupes de deux lettres que l'on retrouve triés à gauche.}
 \label{unbwt} 
 \end{figure}
 
@@ -248,15 +250,15 @@ On construit de la même façon les colonnes suivantes, pour lire la chaîne ini
 
 \subsubsection{FM-index}
 
-En 2000, Paolo Ferragina et Giovanni Manzini\up{\cite{fmindex}} créent une structure d'indexation, appelée FM-index, basée sur la \bwt.
+En 2000, Ferragina et Manzini\up{\cite{fmindex}} créent une structure d'indexation, appelée FM-index, basée sur la \bwt.
 
 Le FM-index contient la \bwt, un échantillonnage du tableau des suffixes (qui donne la position dans le texte initial de chaque rotation), ainsi qu'une fonction $rank(c, i)$  et un tableau $C$.
-La fonction $rank(c, i)$ renvoie  le nombre de caractère $c$ dans $\bwt[0..i]$. Le tableau $C$ donne pour chaque caractère de la \bwt\ le nombre de caractères lexicographiquement plus petits que lui.
+La fonction $rank(c, i)$ renvoie  le nombre de caractères $c$ dans $\bwt[0..i]$. Le tableau $C$ donne pour chaque caractère de la \bwt\ le nombre de caractères lexicographiquement plus petits que lui.
 
 Grâce à cette structure, il est possible de calculer l'association entre la \bwt\ (dernière colonne de la table des rotations, aussi désignée par L pour \textit{last}) et la première colonne de la table des rotations (désignée par F pour \textit{first}) avec la formule suivante : $LF(i) = C[i] + rank(\bwt[i], i)$ (voir figure \ref{lf}).
 
 L'inversion de la \bwt\ peut se faire avec LF() sans la reconstruction de la totalité du tableau des rotations. 
-Il suffit de partir de \$ et de remonter la fonction LF(), en reconstruisant la chaîne initiale jusqu'au début.
+Il suffit de partir de \$ et d'appliquer la fonction LF(), en reconstruisant la chaîne initiale jusqu'au début.
 
 Par exemple, dans la figure \ref{lf}, '\$' est à l'indice 6, et $LF(6) = 0$. $\bwt[0] = \textsc{'a'}$, donc t se termine par \textsc{"a\$"}. On continue, $LF(0) = 1$, $t = \textsc{"...pa\$"}$ ; $LF(1) = 7$, $t = \textsc{"...apa\$"}$ ; ainsi de suite jusqu'à ce qu'on ait retrouvé l'entièreté de la chaîne de départ.
 
@@ -300,14 +302,14 @@ Une fois ces bornes délimitées, on utilise le tableau de suffixes pour trouver
 %Exemple
 
 \subsubsection{Contexte borné}
-Un inconvénient majeur de la \bwt\ est le temps et l'espace nécessaires à sa construction. En effet, trier les rotations peut prendre au maximum $n^{2}$ comparaisons, $n$ étant la longueur de la chaîne.
+Un inconvénient majeur de la \bwt\ est le temps et l'espace nécessaires à sa construction. En effet, la construction se base sur le tri des rotations de la chaîne. Or, la comparaison d'une seule rotation a une complexité dans le pire des cas de $n^2$, $n$ étant la longueur de la chaîne.
 Pour pallier cela, Shindler en 1997 et Yoko en 1999 proposent de ne trier les suffixes que jusqu'à un rang $k$ (Figure \ref{kbwt}).
 
-Cette nouvelle structure est couramment appelée transformée de Burrows-Wheeler à contexte borné, ou $k$-\bwt, et on appelle $k$-contextes les parties de la \kbwt\ dont les rotations sont égales jusqu'à $k$. Dans ces $k$-contextes, les rotations sont rangées dans l'ordre d'apparition dans le texte. L'information de ces $k$-contextes peut être stockée dans un vecteur de bit, que nous appellerons ici $Dk$. Elle peut aussi être retrouvée en temps voulue, comme décrit par Matthias Pétri\up{\cite{petri}} dans sa thèse.
+Cette nouvelle structure est couramment appelée transformée de Burrows-Wheeler à contexte borné, ou $k$-\bwt, et on appelle $k$-contextes les parties de la \kbwt\ dont les rotations sont égales jusqu'à $k$. Dans ces $k$-contextes, les rotations sont rangées dans l'ordre d'apparition dans le texte. L'information de ces $k$-contextes peut être stockée dans un vecteur de bits, que nous appellerons ici $D_k$. Elle peut aussi être retrouvée en temps voulu, comme décrit par Petri\up{\cite{petri}} dans sa thèse.
 
 Le résultat de la \kbwt\ est très proche de la \bwt\ lorsque $k$ est grand, puisque les deux chaînes ne diffèrent que sur les $k$-contextes. Mais même pour des $k$ petits, comme $k = 10$ par exemple pour des reads de taille 70, les deux structures restent similaires. La \kbwt\ est donc également compressible facilement.
 
-Pour inverser la \kbwt, on utilise un algorithme similaire à celui de la \bwt. La différence se situe sur les $k$-contextes, qui sont déjà dans l'ordre du texte. Ainsi, si on calcule la fonction LF() de la même façon que pour la \bwt, elle n'associe pas vraiment la dernière colonne des rotations à la première, nous l'appellerons donc LF'() (Figure \ref{kbwt}). Mais l'inversion reste possible. Pour cela, on part de la fin de la chaîne, \$, et on utilise la fonction LF(). Mais au lieu de continuer avec le résultat de LF(), on prend la première rotation de son $k$-contexte sur laquelle on n'est pas encore passé.
+Pour inverser la \kbwt, on utilise un algorithme similaire à celui de la \bwt. La différence se situe sur les $k$-contextes, qui sont déjà dans l'ordre du texte. Ainsi, si on calcule la fonction LF() de la même façon que pour la \bwt, elle n'associe pas toujours la dernière colonne des rotations à la première, nous l'appellerons donc LF'() (Figure \ref{kbwt}). Mais l'inversion reste possible. Pour cela, on part de la fin de la chaîne, \$, et on utilise la fonction LF(). Mais au lieu de continuer avec le résultat de LF(), on prend la première rotation de son $k$-contexte sur laquelle on n'est pas encore passé.
 
 %la fonction LF() de la même façon que dans le FM-index pour les k-contextes de taille 1. Lorsque LF() pointe sur un contexte plus grand, les $k$-contextes étant déjà dans l'ordre du texte, il suffit de prendre la première lettre, et de marquer le début du contexte à la lettre suivante.
 %\rmq{Je ne comprends pas cette phrase}
@@ -343,7 +345,7 @@ Pour inverser la \kbwt, on utilise un algorithme similaire à celui de la \bwt. 
 
 
 
-La \textit{backward search}, par contre, ne peut pas se calculer pour des motifs de longueur supérieure à $k$. Pour rechercher un motif $m$ plus grand que $k$, une méthode consiste à rechercher le suffixe de longueur $k$ de $m$, puis de remonter avec LF() le long du texte pour tester pour chaque résultat si les précédentes correspondent bien au début du motif. Pour cela par contre, la fonction LF() doit être calculée précisément. Petri\up{\cite{petri}} a donc trouvé un algorithme pour retrouver LF() à partir de la \kbwt, la $k-1$-\bwt, et quelques structures auxiliaires, dont des vecteurs de bits et deux colonnes supplémentaires de la matrice des rotations.
+La \textit{backward search}, par contre, ne peut pas se calculer pour des motifs de longueur supérieure à $k$. Pour rechercher un motif $m$ plus grand que $k$, une méthode consiste à rechercher le suffixe de longueur $k$ de $m$, puis de remonter avec LF() le long du texte pour tester pour chaque résultat si les précédentes correspondent bien au début du motif. Pour cela par contre, la fonction LF() doit être calculée précisément. Petri\up{\cite{petri}} a trouvé un algorithme pour retrouver LF() à partir de la \kbwt, la $k-1$-\bwt, et quelques structures auxiliaires, dont des vecteurs de bits et deux colonnes supplémentaires de la matrice des rotations.
 %\rmq{Précise ce que veut dire «~tester chaque résultat~»}
 
 La \kbwt\ se calcule donc plus facilement que la \bwt, tout en se compressant autant et en assurant également sa réversibilité. Néanmoins, la recherche de motifs requiert beaucoup d'espace supplémentaire.
