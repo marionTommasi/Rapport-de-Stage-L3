@@ -138,7 +138,7 @@ La \kbwt\ triée en elle-même prend moins de place que la \bwt. Néanmoins, com
 
 D'un autre côté, on s'attend à ce que la fonction LF() contienne de longues suites de nombres consécutifs, sur le même principe que la redondance des calculs vue dans le paragraphe précédent. LF() pourrait donc être plus compressible que l'ensemble des structures utilisées pour la calculer.
 
-Deux approches ont été envisagées pour stocker LF(). La première s'appuie sur la réflexion ci-dessus appuyée par la figure \ref{suitesLF}, LF() est composée de longues suites de nombres consécutifs. Conserver l'intervalle entre chaque valeur de LF(), plutôt que les valeurs elles-mêmes, amènerait donc à de nombreuses suites de 1, rendant LF() plus facilement compressible.
+Deux approches ont été envisagées pour stocker LF(). La première s'appuie sur la réflexion ci-dessus appuyée par la figure \ref{suitesLF}, LF() est composée de longues suites de nombres consécutifs. Conserver l'intervalle entre chaque valeur de LF(), plutôt que les valeurs elles-mêmes, amènerait donc à de nombreuses suites de 1, rendant LF() plus facilement compressible. Ainsi, on garde la première valeur de LF() puis le résultat de $LF(i) - LF(i-1)$ pour tout $i$ supérieur à 0.
 
 \begin{figure}[!ht]
     \center
@@ -147,7 +147,7 @@ Deux approches ont été envisagées pour stocker LF(). La première s'appuie su
     \label{suitesLF}
 \end{figure}
 
-La deuxième approche consiste à regarder la différence entre la fonction LF() et $LF'(i) = C[i] + rank(\bwt[i], i)$, à savoir la fonction utilisée pour calculer LF() sur la \bwt.
+La deuxième approche consiste à regarder la différence entre la fonction LF() et $LF'(i) = C[i] + rank(\bwt[i], i)$, c'est-à-dire la fonction utilisée pour calculer LF() sur la \bwt. Avec cette méthode, il suffit pour retrouver LF() de calculer LF'() et lui ajouter la différence conservée.
 %\rmq{S'agit-il de la différence entre LF($i$) et LF'$(i)$ ? Mais dans ce cas, en position i dans la \kbwt{} et dans la BWT nous n'avons pas forcément la même permutation circulaire. Il faut conserver le fait que LF nous amène à la permutation circulaire précédente.}
 
 
@@ -175,9 +175,9 @@ La deuxième approche consiste à regarder la différence entre la fonction LF()
 
 \textit{Cette section n'est donc pas finie, il manque des résultats dont une partie sur l'entropie, une sur les temps de calcul de recherche des motifs avec le stockage de LF(), et une sur les temps de calcul de la recherche de positions avec l'algorithme 1.}
 
-Pour les résultats de cette section, nous nous sommes appuyés sur un jeu de 500 reads de taille 70, sans erreur.
+Pour les résultats de cette section, nous nous sommes appuyés sur un jeu de 500 reads de taille 70, sans erreur, appelé reads10K.
 
-Nous avons étudié la compression de la \kbwt\ triée par rapport à la \kbwt\ présentée dans la thèse de Petri\up{\cite{petri}}. Comme attendu, on peut voir dans la figure \ref{tailleContextes} que les $k$-contextes de la \kbwt\ pour des reads sont grands et nombreux. La compression est donc bien meilleure (table \ref{struct}).
+Nous avons étudié la compression de la \kbwt\ triée par rapport à la \kbwt\ présentée dans la thèse de Petri\up{\cite{petri}}. Comme attendu, on peut voir dans la figure \ref{tailleContextes} que les $k$-contextes de la \kbwt\ pour des reads sont grands et nombreux. La compression est donc bien meilleure (figure \ref{struct}).
 
 \begin{figure}[!ht]
     \center
@@ -186,19 +186,38 @@ Nous avons étudié la compression de la \kbwt\ triée par rapport à la \kbwt\ 
     \label{tailleContextes}
 \end{figure}
 
-De plus nous avons étudier l'espace pris par la fonction LF() suivant les deux approches décrites dans la section précédente (table \ref{résultats}). 
-
 \begin{figure}
+\begin{center}
 \begin{tabular}{|c||c|c|}
 	\hline
 	 & reads10K & reads100\\ \hline \hline
-	fichier original & & \\ \hline
+	fichier original & 51,8~ko & \\ \hline
 	\bwt & 48,3~ko & 941~octets\\ \hline
 	\kbwt & & \\ \hline
 	\kbwt\ triée & 51,4~ko & 935~octets \\ \hline
 	\kbwt\ + $Dk$ & & \\ \hline
 	\kbwt\ triée + $Dk$ + $Corr$ & & \\ \hline
 \end{tabular}
-\caption{Comparaison de la taille des différentes structures étudiées durant ce stage. La compression a été effectuée avec le compresseur \textit{bzip2}. $Dk$ est le vecteur de bits contenant la délimitation des $k$-contextes, $Corr$ est le vecteur de bit introduit dans la section 2.2.1, correspondant au \textit{xor} entre le wavelet tree de la \kbwt\ et celui de la \kbwt\ triée.}
+\caption{Comparaison de la taille des différentes structures étudiées durant ce stage. Les \kbwt\ ont été calculées avec $k=10$. $Dk$ est le vecteur de bits contenant la délimitation des $k$-contextes, $Corr$ est le vecteur de bit introduit dans la section 2.2.1, correspondant au \textit{xor} entre le wavelet tree de la \kbwt\ et celui de la \kbwt\ triée. La compression a été effectuée avec le compresseur \textit{bzip2}.}
 \label{struct}
+\end{center}
 \end{figure}
+
+De plus nous avons étudier l'espace pris par la fonction LF() suivant les deux approches décrites dans la section précédente (table \ref{resLF}). On s’aperçoit que la deuxième méthode, la comparaison des deux fonctions LF() et LF'() est légèrement plus compressible. Dans tous les cas, ces méthodes occupent beaucoup moins d'espace que les structures utilisées par Petri.
+
+\begin{figure}
+\begin{center}
+\begin{tabular}{|c||c|c|}
+	\hline
+	 & reads10K & reads100\\ \hline \hline
+	LF() & & 21,5~ko\\ \hline
+	LF'() & 1,2~Mo & 19,9~ko\\ \hline
+	LF(i+1)-LF(i) & & \\ \hline
+	LF()-LF'() & 84,4~ko & 4,6~ko \\\hline
+	
+\end{tabular}
+\caption{Comparaison de la taille prise par la fonction LF() selon différentes méthodes, pour la \kbwt\ triée de reads10K et reads100 avec $k=10$. La compression a été effectuée avec le compresseur \textit{bzip2}.}
+\label{resLF}
+\end{center}
+\end{figure}
+
