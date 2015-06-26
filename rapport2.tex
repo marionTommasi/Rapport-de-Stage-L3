@@ -10,11 +10,14 @@
 \usepackage{xcolor}
 \usepackage[hidelinks]{hyperref}
 \usepackage[french]{varioref}
-\usepackage{algorithm}
-\usepackage{algorithmic}
+\usepackage[algoruled]{algorithm2e}
 \usepackage{qtree}
 \usepackage{array}
 \usepackage{multirow}
+
+
+\SetKwProg{Fn}{Function}{}{end}\SetKwFunction{FRecurs}{FnRecursive}%
+\SetKwFunction{Fct}{RecherchePositions}%
 
 \newcommand\rmq[2][green!50!black]{\marginpar{\hspace*{-0.5em}\begin{minipage}{0.25\textwidth}\scriptsize\if\empty#1\empty\else\color{#1}\fi
       #2

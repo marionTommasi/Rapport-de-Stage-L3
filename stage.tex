@@ -104,36 +104,60 @@ C'est pour cela que l'on propose de calculer LF() par \textit{blocs}, (Algorithm
 Sur la figure \ref{redondance} par exemple, pour chercher les positions du motif \textsc{"ata"}, on a $i+5 - i +1 = 6$ lignes, mais $j+6 - j +1 = 7$ lignes entre LF($i$) et LF($i+5$). On passe de 6 à 7 lignes, il y a donc eu une insertion (le motif \textsc{tatc}). On divise donc le bloc en deux, et on recommence. Pour la deuxième moitié du bloc, le nombre de lignes au départ est le même qu'après le calcul de LF() ($i+5 - i+3 = 2$ et $j+6 - j+4 = 2$), le motif se retrouve bien dans toutes les rotations de $j+4$ à $j+6$. Par contre, pour le premier bloc, $i+2 - i = 2$ et $j+3 - j = 3$, l'insertion a donc lieu entre $j$ et $j+3$ exclus. On continue donc la division de ce bloc, jusqu'à ce que l'on obtienne LF() pour toutes les rotations.
 
 
-\begin{algorithm}
-\caption{Recherche de positions dans le texte}	
-\label{bloc}	
-	\begin{algorithmic}
-	\REQUIRE 
+\begin{algorithm}[H]
+\Fn{\Fct($start$, $end$, $cpt$, $pos$)}{
+	\KwData{Les arguments : \\
+		\begin{itemize}
+			\item $start$ et $end$ les indices de la première et la dernière rotation recherchées,
+			\item $cpt$ et $pos$, un entier et un ensemble initialement nul et vide, utilisés dans les calculs;
+		\end{itemize}\\
+		Autres données et fonctions (nous ne les passerons pas en argument pour alléger l'écriture) :
 		\begin{itemize}
 			\item $kbwt$ la \kbwt\ triée
-			\item $s$ et $e$ les indices de la première est la dernière rotation dont le motif est préfixe, 
-			\item la fonction $LF()$, 
-			\item le tableau de suffixe $SA$ échantillonné en un taux $p$, 
+			\item le tableau de suffixe $SA$ échantillonné en un taux $p$,
+			\item $alph$ l'alphabet de $kbwt$
+			\item la fonction $LF()$,
+			\item une fonction $count(t, c)$ qui compte le nombre de caractères $c$ dans $t$.
 		\end{itemize}
-%		\CALL{recherchePositions}{$s$, $e$, $SA$, $p$, 0, []}
-	\STATE FONCTION recherchePositions($s$, $e$, $SA$, $p$, $cpt$, $lpos$): \\
-	\FORALL{$i \geq s,\ i \leq e,\ i\pmod p = 0$}
-		\STATE $lpos \gets lpos + SA[i/p] + cpt$
-	\ENDFOR
-	\IF{$lf(e) - lf(s) == e - s$}
-		\STATE $lpos \gets lpos + chercherPositions(LF(s), LF(e), SA, cpt+1, [])$
-	\ELSE
-		\STATE $lpos \gets chercherPositions((e-s)/2 +s, e, SA, cpt+1, lpos)$
-		\STATE $lpos \gets lpos + chercherPositions(s, (e-s)/2 +s, SA, cpt+1, [])$
-	\ENDIF
-	\RETURN $lpos$
-	\end{algorithmic}
+	}
+	\KwResult{ensemble des positions des rotations données}
+
+	\tcc{On mémorise les positions de toutes les rotations ayant une entrée dans $SA$}
+	\For{$\forall i, i \in [start;end], i \pmod p = 0$}{
+		$lpos \gets lpos + SA[i/p] + cpt$\;
+	}
+
+	$i \gets start$\;
+	\For{$c \in alph$}{
+	\tcc{On sépare les rotations finissant par des lettres différentes}
+		$j \gets count(kbwt, c) + i$\;
+		\eIf{$LF(j)-LF(i) = j-i$}{
+			$pos \gets pos + $\Fct($lf(i), lf(j), cpt+1, pos$)\;
+		}{
+			$pos \gets pos + $\Fct($i, (j-i)/2, cpt, pos$)\;
+			$pos \gets pos + $\Fct($(j-i)/2, j, cpt, pos$)\;
+		}
+	}
+}
+\caption{Recherche de positions dans le texte d'un intervalle}	
+\label{bloc}	
 \end{algorithm}
+%%	\FORALL{$i \geq s,\ i \leq e,\ i\pmod p = 0$}
+%%		\STATE $lpos \gets lpos + SA[i/p] + cpt$
+%%	\ENDFOR
+%%	\IF{$lf(e) - lf(s) == e - s$}
+%%		\STATE $lpos \gets lpos + chercherPositions(LF(s), LF(e), SA, cpt+1, [])$
+%%	\ELSE
+%%		\STATE $lpos \gets chercherPositions((e-s)/2 +s, e, SA, cpt+1, lpos)$
+%%		\STATE $lpos \gets lpos + chercherPositions(s, (e-s)/2 +s, SA, cpt+1, [])$
+%%	\ENDIF
+%%	\RETURN $lpos$
+%%	\end{algorithmic}
 
 
 
 \subsubsection{Stockage de la fonction LF}
-La \kbwt\ triée prend moins de place que la \bwt\ après compression. Néanmoins, comme la \kbwt\ classique (non triée), elle requiert de nombreuses autres structures pour calculer LF(). Elle nécessite ainsi, en plus de la \kbwt\ pour un $k$ donné, la $k-1$-\bwt, les $k$\up{ième} colonnes des matrices des rotations de ces deux transformées, et quelques vecteurs de bits auxiliaires. Il faut donc plus que quadrupler la taille de la structure pour calculer LF().
+La \kbwt\ triée prend moins de place que la \bwt\ après compression. Néanmoins, comme la \kbwt\ classique (non triée), elle requiert de nombreuses autres structures pour calculer LF()\up{\cite{petri}}. Elle nécessite ainsi, en plus de la \kbwt\ pour un $k$ donné, la $k-1$-\bwt, les $k$\up{ième} colonnes des matrices des rotations de ces deux transformées, et quelques vecteurs de bits auxiliaires. Il faut donc plus que quadrupler la taille de la structure pour calculer LF().
 % \rmq{pour ième, utilise la macro \texttt{\textbackslash ieme}}
 
 D'un autre côté, on s'attend à ce que la fonction LF() contienne de longues suites de nombres consécutifs, sur le même principe que la redondance des calculs vue dans le paragraphe précédent. LF() pourrait donc être plus compressible que l'ensemble des structures utilisées pour la calculer.
