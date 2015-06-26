@@ -173,11 +173,11 @@ La deuxième approche consiste à regarder la différence entre la fonction LF()
 
 \subsection{Résultats} 
 
-\textit{Cette section n'est donc pas finie, il manque des résultats dont une partie sur l'entropie, une sur les temps de calcul de recherche des motifs avec le stockage de LF(), et une sur les temps de calcul de la recherche de positions avec l'algorithme 1.}
+%\textit{Cette section n'est donc pas finie, il manque des résultats dont une partie sur l'entropie, une sur les temps de calcul de recherche des motifs avec le stockage de LF(), et une sur les temps de calcul de la recherche de positions avec l'algorithme 1.}
 
-Pour les résultats de cette section, nous nous sommes appuyés sur un jeu synthétique du génome lambda phage de 500 reads de taille 70, sans erreur, appelé reads10K.
+Pour les résultats de cette section, nous nous sommes appuyés sur un jeu synthétique du génome lambda phage de 500 reads de taille 70, sans erreurs, appelé \textit{reads10K} ; ainsi qu'un jeu plus petit généré artificiellement et toujours sans erreurs, de 400 reads de taille 35, \textit{reads100}.
 
-Nous avons étudié la compression de la \kbwt\ triée par rapport à la \kbwt\ présentée dans la thèse de Petri\up{\cite{petri}}. Comme attendu, on peut voir dans la figure \ref{tailleContextes} que les $k$-contextes de la \kbwt\ pour des reads sont grands et nombreux. La compression est donc meilleure (figure \ref{struct}).
+Nous avons étudié la compression de la \kbwt\ triée par rapport à la \kbwt\ présentée dans la thèse de Petri\up{\cite{petri}}. Comme attendu, on peut voir dans la figure \ref{tailleContextes} que les $k$-contextes de la \kbwt\ pour des reads sont grands et nombreux. La compression est donc meilleure (table \ref{struct}).
 
 \begin{figure}[!ht]
     \center
@@ -186,38 +186,48 @@ Nous avons étudié la compression de la \kbwt\ triée par rapport à la \kbwt\ 
     \label{tailleContextes}
 \end{figure}
 
-\begin{figure}
-\begin{center}
+\begin{table}
+\centering
 \begin{tabular}{|c||c|c|}
-	\hline
-	 & reads10K & reads100\\ \hline \hline
-	fichier original & 51,8~ko & \\ \hline
+	\cline{2-3}
+	\multicolumn{1}{c|}{} & reads10K & reads100\\ \cline{2-3} \hline
+	fichier original & 51,8~ko & 706~octets\\ \hline
 	\bwt & 48,3~ko & 941~octets\\ \hline
-	\kbwt & & \\ \hline
+	\kbwt & 1,3~ko & 57,3~ko \\ \hline
 	\kbwt\ triée & 51,4~ko & 935~octets \\ \hline
 	\kbwt\ + $Dk$ & & \\ \hline
 	\kbwt\ triée + $Dk$ + $Corr$ & & \\ \hline
 \end{tabular}
 \caption{Comparaison de la taille des différentes structures étudiées durant ce stage. Les \kbwt\ ont été calculées avec $k=10$. $Dk$ est le vecteur de bits contenant la délimitation des $k$-contextes, $Corr$ est le vecteur de bit introduit dans la section 2.2.1, correspondant au \textit{xor} entre le wavelet tree de la \kbwt\ et celui de la \kbwt\ triée. La compression a été effectuée avec le compresseur \textit{bzip2}.}
 \label{struct}
-\end{center}
-\end{figure}
+\end{table}
 
 De plus nous avons étudié l'espace pris par la fonction LF() suivant les deux approches décrites dans la section précédente (table \ref{resLF}). On s’aperçoit que la deuxième méthode, la comparaison des deux fonctions LF() et LF'() est légèrement plus compressible. Dans tous les cas, ces méthodes occupent beaucoup moins d'espace que les structures utilisées par Petri.
 
-\begin{figure}
-\begin{center}
-\begin{tabular}{|c||c|c|}
-	\hline
-	 & reads10K & reads100\\ \hline \hline
-	LF() & & 21,5~ko\\ \hline
-	LF'() & 1,2~Mo & 19,9~ko\\ \hline
-	LF(i+1)-LF(i) & & \\ \hline
-	LF()-LF'() & 84,4~ko & 4,6~ko \\\hline
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c||c|c|c|c|}
+	\cline{3-6}
+	\multicolumn{2}{c|}{} & \multicolumn{3}{c|}{reads10K} & reads100\\
+	\cline{3-6}
+\multicolumn{2}{c|}{}       
+& $k=6$  & $k=10$  & $k=20$   & $k=10$ \\ \cline{3-6}\hline
+\multicolumn{2}{|c||}{LF()}  
+& 1,8~Mo & 1,9~Mo  & 1,2~Mo   & 21,5~ko \\ \hline
+\multicolumn{2}{|c||}{LF'()}
+& 1,2~Mo & 1,2~Mo  & 1,1~Mo   & 19,9~ko \\ \hline
+\multicolumn{2}{|c||}{LF(i+1)-LF(i)} 
+\color{red}& 1~Mo   & 1,3~Mo  & 142,2~ko & 5,1~ko  \\ \hline
+\multicolumn{2}{|c||}{\color{red}LF()-LF'()}
+& \color{red}1,2~Mo & \color{red}84,4~ko & \color{red}101,5~ko & \color{red}4,6~ko  \\ \hline
+\multirow{4}{*}{Petri}
+& $k-1$-\bwt &   9,5~ko    &   50,5~ko &       52,1~ko &     933~octets \\
+& A          &   9,4~ko    &   55,8~ko &       88,9~ko &       1,5~ko \\
+& S          &  204,8~ko   &   70,9~ko &       94,2~ko &       1,9~ko \\ \cline{2-6}
+& Total &$\geq$~223,7~ko&$\geq$~177,2~ko&$\geq$~235,2~ko&$\geq$~4,3~ko \\ \hline
 	
 \end{tabular}
-\caption{Comparaison de la taille prise par la fonction LF() selon différentes méthodes, pour la \kbwt\ triée de reads10K et reads100 avec $k=10$. La compression a été effectuée avec le compresseur \textit{bzip2}.}
+\caption{Comparaison de la taille prise par la fonction LF() selon différentes méthodes, pour la \kbwt\ triée de reads10K et reads100. Les dernières lignes du tableau montre l'espace utilisé par l'ensemble des structures utilisées par Petri pour calculer LF() sans la stocker. Seuls les vecteurs de bits ($D_k$ et $D_k-1$) n'ont pas été comptés. La compression a été effectuée avec le compresseur \textit{bzip2}.}
 \label{resLF}
-\end{center}
-\end{figure}
+\end{table}
 
