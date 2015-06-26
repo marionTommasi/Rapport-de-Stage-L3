@@ -62,7 +62,7 @@ Le vecteur de bits obtenu ne devrait contenir que très peu de 1. Les \textit{sa
 
 
 \subsubsection{Recherche de positions de motifs courts}
-Pour éviter la redondance des calculs lors de la recherche de positions de motifs, la première idée a été de calculer ces positions par \textit{blocs}, comme nous allons l'expliquer. Nous ne nous intéresserons ici qu'aux motifs de taille inférieure ou égale à $k$. 
+Pour éviter la redondance des calculs lors de la recherche de positions de motifs, la première idée a été de calculer ces positions par \textit{blocs}, comme nous allons l'expliquer. Nous ne nous intéresserons d'abord qu'aux motifs de taille égale à $k$. 
 
 Tout d'abord, on utilise la \textit{backward search} de Ferragina et Manzini pour déterminer à quel endroit de la \kbwt\ se trouve le motif, et on calcule le nombre de rotations concernées. Il faut maintenant retrouver sa position dans le texte, ce qui se fait grâce à la fonction LF() pour les rotations n'étant pas dans le tableau de suffixes. Or, nous travaillons ici sur des reads, qui sont des données très redondante. La plupart des motifs trouvés ont une forte probabilité de faire partie d'un même motif commun plus grand. Par exemple, dans la figure \ref{redondance}, presque tous les motifs \textsc{ata} font partie du motif \textsc{tata}. La conséquence est que la fonction LF() appliquée sur chaque motif nous renverra dans une même zone de la \kbwt, avec les mêmes motifs les uns à côté des autres.
 
@@ -101,30 +101,41 @@ Tout d'abord, on utilise la \textit{backward search} de Ferragina et Manzini pou
 
 C'est pour cela que l'on propose de calculer LF() par \textit{blocs}, (Algorithme \ref{bloc}). Il s'agit de calculer LF() pour la première et la dernière rotation dont le motif recherché est préfixe, et dont la \kbwt\ est identique, et d'inférer grâce à celles-là celles des rotations intermédiaires. Il faut pour cela vérifier que d'autres rotations ne se sont pas insérées entre celles calculées, comme le motif \textsc{tatc} dans la figure \ref{redondance}. Pour cela, il suffit de compter le nombre de lignes du motif qui nous intéresse et le nombre de rotations sur la plage renvoyée par LF(). Si ce dernier est plus grand, d'autre motifs se sont insérés. On peut donc diviser le bloc jusqu'à trouver l'emplacement des insertions, et ne pas les inclure dans notre recherche.
 
-Sur la figure \ref{redondance} par exemple, pour chercher les positions du motif \textsc{"ata"}, on a $i+5 - i +1 = 6$ lignes, mais $j+6 - j +1 = 7$ lignes entre LF($i$) et LF($i+5$). On passe de 6 à 7 lignes, il y a donc eu une insertion (le motif \textsc{tatc}). On divise donc le bloc en deux, et on recommence. Pour la deuxième moitié du bloc, le nombre de lignes au départ est le même qu'après le calcul de LF() ($i+5 - i+3 = 2$ et $j+6 - j+4 = 2$), le motif se retrouve bien dans toutes les rotations de $j+4$ à $j+6$. Par contre, pour le premier bloc, $i+2 - i = 2$ et $j+3 - j = 3$, l'insertion a donc lieu entre $j$ et $j+3$ exclus. On continue donc la division de ce bloc, jusqu'à ce que l'on obtienne LF() pour toutes les rotations.
+Sur la figure \ref{redondance} par exemple, pour chercher les positions du motif \textsc{"ata"}, on a $i+5 - i +1 = 6$ lignes, mais $j+6 - j +1 = 7$ lignes entre LF($i$) et LF($i+5$). On passe de 6 à 7 lignes, il y a donc eu une insertion (le motif \textsc{tatc}). On divise donc le bloc en deux, et on recommence. Pour la deuxième moitié du bloc, le nombre de lignes au départ est le même qu'après le calcul de LF() ($i+5 - i+3 = 2$ et $j+6 - j+4 = 2$), le motif se retrouve bien dans toutes les rotations de $j+4$ à $j+6$. Par contre, pour le premier bloc, $i+2 - i = 2$ et $j+3 - j = 3$, l'insertion a donc lieu entre $j$ et $j+3$ exclus. On continue donc la division de ce bloc, jusqu'à ce que les blocs soient tellement petits qu'il n'est plus utile d'utiliser notre algorithme. À ce moment on peut finir de chercher les positions rotation par rotation, comme dans la méthode classique.
 
+Pour des motifs de taille inférieure à $k$, il est possible d'utiliser ce même algorithme, en l'appliquant sur chaque $k$-contexte.
 
-\begin{algorithm}[H]
+\begin{algorithm}[h]
+\caption{Recherche de positions dans le texte d'un intervalle\label{bloc}	}	
 \Fn{\Fct($start$, $end$, $cpt$, $pos$)}{
-	\KwData{Les arguments : \\
+	\KwData{\\Les arguments : \\
 		\begin{itemize}
 			\item $start$ et $end$ les indices de la première et la dernière rotation recherchées,
-			\item $cpt$ et $pos$, un entier et un ensemble initialement nul et vide, utilisés dans les calculs;
+			\item $cpt$ un entier initialement nul, servant à compter les applications de LF()
+			\item $pos$ un ensemble initialement vide, pour mémoriser au fur et à mesure les positions des rotations ;
 		\end{itemize}\\
 		Autres données et fonctions (nous ne les passerons pas en argument pour alléger l'écriture) :
 		\begin{itemize}
 			\item $kbwt$ la \kbwt\ triée
 			\item le tableau de suffixe $SA$ échantillonné en un taux $p$,
 			\item $alph$ l'alphabet de $kbwt$
+			\item $seuil$, nombre de rotations en-dessous duquel on recherche les positions classiquement, rotation par rotation.
 			\item la fonction $LF()$,
 			\item une fonction $count(t, c)$ qui compte le nombre de caractères $c$ dans $t$.
+			\item $RechercheClassique(start, end, cpt)$ la fonction de recherche classique des positions des rotations entre $start$ et $end$, à laquelle on ajoute $cpt$ pour le nombre de fonction LF() déjà appliquées.
 		\end{itemize}
 	}
-	\KwResult{ensemble des positions des rotations données}
+	\KwResult{\\L'ensemble des positions des rotations données}
+
+	\tcc{Si le nombre de rotations est petit, on cherche leur position ligne par ligne. C'est notre condition d'arrêt.}
+	\If{$end - start < seuil$}{
+		$pos \gets pos + RechercheClassique(start, end, cpt)$\;
+		\KwRet{pos}
+	}
 
 	\tcc{On mémorise les positions de toutes les rotations ayant une entrée dans $SA$}
 	\For{$\forall i, i \in [start;end], i \pmod p = 0$}{
-		$lpos \gets lpos + SA[i/p] + cpt$\;
+		$pos \gets pos + SA[i/p] + cpt$\;
 	}
 
 	$i \gets start$\;
@@ -138,22 +149,10 @@ Sur la figure \ref{redondance} par exemple, pour chercher les positions du motif
 			$pos \gets pos + $\Fct($(j-i)/2, j, cpt, pos$)\;
 		}
 	}
+	
+	\KwRet{pos}
 }
-\caption{Recherche de positions dans le texte d'un intervalle}	
-\label{bloc}	
 \end{algorithm}
-%%	\FORALL{$i \geq s,\ i \leq e,\ i\pmod p = 0$}
-%%		\STATE $lpos \gets lpos + SA[i/p] + cpt$
-%%	\ENDFOR
-%%	\IF{$lf(e) - lf(s) == e - s$}
-%%		\STATE $lpos \gets lpos + chercherPositions(LF(s), LF(e), SA, cpt+1, [])$
-%%	\ELSE
-%%		\STATE $lpos \gets chercherPositions((e-s)/2 +s, e, SA, cpt+1, lpos)$
-%%		\STATE $lpos \gets lpos + chercherPositions(s, (e-s)/2 +s, SA, cpt+1, [])$
-%%	\ENDIF
-%%	\RETURN $lpos$
-%%	\end{algorithmic}
-
 
 
 \subsubsection{Stockage de la fonction LF}
@@ -199,7 +198,7 @@ La deuxième approche consiste à regarder la différence entre la fonction LF()
 
 %\textit{Cette section n'est donc pas finie, il manque des résultats dont une partie sur l'entropie, une sur les temps de calcul de recherche des motifs avec le stockage de LF(), et une sur les temps de calcul de la recherche de positions avec l'algorithme 1.}
 
-Pour les résultats de cette section, nous nous sommes appuyés sur un jeu synthétique du génome lambda phage de 500 reads de taille 70, sans erreurs, appelé \textit{reads10K} ; ainsi qu'un jeu plus petit généré artificiellement et toujours sans erreurs, de 400 reads de taille 35, \textit{reads100}.
+Pour les résultats de cette section, nous nous sommes appuyés sur un jeu synthétique du génome lambda phage de 10~000 reads de taille 70, sans erreurs, appelé \textit{reads10K} ; ainsi qu'un jeu plus petit généré artificiellement et toujours sans erreurs, de 400 reads de taille 35, \textit{reads100}.
 
 Nous avons étudié la compression de la \kbwt\ triée par rapport à la \kbwt\ présentée dans la thèse de Petri\up{\cite{petri}}. Comme attendu, on peut voir dans la figure \ref{tailleContextes} que les $k$-contextes de la \kbwt\ pour des reads sont grands et nombreux. La compression est donc meilleure (table \ref{struct}).
 
@@ -226,7 +225,7 @@ Nous avons étudié la compression de la \kbwt\ triée par rapport à la \kbwt\ 
 \label{struct}
 \end{table}
 
-De plus nous avons étudié l'espace pris par la fonction LF() suivant les deux approches décrites dans la section précédente (table \ref{resLF}). On s’aperçoit que la deuxième méthode, la comparaison des deux fonctions LF() et LF'() est légèrement plus compressible. Dans tous les cas, ces méthodes occupent beaucoup moins d'espace que les structures utilisées par Petri.
+De plus nous avons étudié l'espace pris par la fonction LF() suivant les deux approches décrites dans la section précédente (table \ref{resLF}). Nous avons ici calculé la fonction LF() de la \kbwt non triée, en s'appuyant sur le tableau de suffixes, pour faciliter l'implémentation, cette fonction étant suffisante pour calculer la position de motifs. On s’aperçoit que la deuxième méthode, la comparaison des deux fonctions LF() et LF'() est légèrement plus compressible. Dans tous les cas, ces méthodes occupent beaucoup moins d'espace que les structures utilisées par Petri.
 
 \begin{table}[h]
 \centering
